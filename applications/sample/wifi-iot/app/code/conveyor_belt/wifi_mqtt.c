@@ -142,8 +142,9 @@ int MQTT_Connect(void)
     len = MQTTSerialize_connect(buf, buflen, &data);
     transport_sendPacketBuffer(g_mqttSocket, buf, len);
 
-    /* Wait for CONNACK */
-    if (MQTTPacket_read(buf, buflen, transport_getdata) == CONNACK) {
+    /* Wait for CONNACK with timeout */
+    int packetType = MQTTPacket_read(buf, buflen, transport_getdata);
+    if (packetType == CONNACK) {
         unsigned char sessionPresent, connack_rc;
         if (MQTTDeserialize_connack(&sessionPresent, &connack_rc, buf, buflen) != 1 ||
             connack_rc != 0) {
@@ -152,8 +153,13 @@ int MQTT_Connect(void)
             g_mqttSocket = -1;
             return -1;
         }
+    } else if (packetType < 0) {
+        printf("[MQTT] Connection timeout or error\r\n");
+        transport_close(g_mqttSocket);
+        g_mqttSocket = -1;
+        return -1;
     } else {
-        printf("[MQTT] No CONNACK received\r\n");
+        printf("[MQTT] Unexpected packet type: %d\r\n", packetType);
         transport_close(g_mqttSocket);
         g_mqttSocket = -1;
         return -1;
@@ -259,8 +265,14 @@ void MQTT_ProcessMessages(void)
     unsigned char retained;
     unsigned short msgid;
 
-    /* Non-blocking check for incoming messages */
+    /* Check for incoming messages (transport_getdata has 1s timeout) */
     rc = MQTTPacket_read(buf, buflen, transport_getdata);
+
+    /* Handle error or timeout cases */
+    if (rc <= 0) {
+        /* Timeout or error - no data available, return immediately */
+        return;
+    }
 
     if (rc == PUBLISH) {
         MQTTDeserialize_publish(&dup, &qos, &retained, &msgid,

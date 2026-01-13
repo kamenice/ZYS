@@ -75,7 +75,7 @@ void ConveyorSystem_Init(void)
     OLED_DisplayInit();
 
     /* Initialize button for manual control */
-    IoSetFunc(BUTTON_GPIO, WIFI_IOT_IO_FUNC_GPIO_14_GPIO);
+    IoSetFunc(BUTTON_GPIO, WIFI_IOT_IO_FUNC_GPIO_3_GPIO);
     GpioSetDir(BUTTON_GPIO, WIFI_IOT_GPIO_DIR_IN);
     GpioRegisterIsrFunc(BUTTON_GPIO,
                         WIFI_IOT_INT_TYPE_EDGE,

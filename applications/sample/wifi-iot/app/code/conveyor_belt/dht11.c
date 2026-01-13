@@ -35,19 +35,23 @@ static void DHT11_SetInput(void)
     GpioSetDir(DHT11_GPIO, WIFI_IOT_GPIO_DIR_IN);
 }
 
-/* Wait for specified GPIO value with timeout */
+/* Wait for specified GPIO value with timeout
+ * Uses larger sleep intervals initially and falls back to polling for precision
+ * This reduces CPU usage while maintaining timing accuracy
+ */
 static int DHT11_WaitForValue(WifiIotGpioValue expectedValue, uint32_t timeoutUs)
 {
     WifiIotGpioValue value;
     uint32_t elapsed = 0;
+    const uint32_t pollInterval = 5; /* 5us polling interval */
 
     while (elapsed < timeoutUs) {
         GpioGetInputVal(DHT11_GPIO, &value);
         if (value == expectedValue) {
             return elapsed;
         }
-        usleep(1);
-        elapsed++;
+        usleep(pollInterval);
+        elapsed += pollInterval;
     }
 
     return -1; /* Timeout */

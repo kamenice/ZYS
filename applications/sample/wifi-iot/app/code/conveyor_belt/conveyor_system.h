@@ -19,7 +19,7 @@
 #include <stdint.h>
 
 /* Button GPIO Pin Definition */
-#define BUTTON_GPIO             WIFI_IOT_GPIO_IDX_14  /* User button (GPIO14) */
+#define BUTTON_GPIO             WIFI_IOT_GPIO_IDX_3   /* User button (GPIO3) - GPIO14 is used for I2C SCL */
 
 /* System default thresholds */
 #define DEFAULT_WEIGHT_THRESHOLD    5000.0  /* 5kg default weight threshold */

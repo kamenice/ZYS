@@ -80,8 +80,12 @@ unsigned long HX711_ReadRaw(void)
     GpioSetOutputVal(HX711_SCK_GPIO, WIFI_IOT_GPIO_VALUE1);
     usleep(2);
 
-    /* Convert from 2's complement */
-    value = value ^ 0x800000;
+    /* Convert from 2's complement for 24-bit signed value
+     * If MSB is set, the value is negative, subtract 0x1000000 to get signed value
+     */
+    if (value & 0x800000) {
+        value = value - 0x1000000;
+    }
 
     /* End 25th pulse */
     GpioSetOutputVal(HX711_SCK_GPIO, WIFI_IOT_GPIO_VALUE0);
