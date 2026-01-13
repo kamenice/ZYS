@@ -19,12 +19,13 @@
 #include <stdint.h>
 
 /* Buzzer GPIO Pin Definition */
-#define BUZZER_GPIO             WIFI_IOT_GPIO_IDX_9   /* PWM pin (GPIO9/PWM0) */
-#define BUZZER_PWM_PORT         WIFI_IOT_PWM_PORT_PWM0
+#define BUZZER_GPIO             WIFI_IOT_GPIO_IDX_9   /* GPIO9 for active buzzer */
 
-/* Buzzer PWM Parameters */
-#define BUZZER_FREQ             34052   /* ~4.7kHz tone frequency divisor */
-#define BUZZER_DUTY             17026   /* 50% duty cycle */
+/* Active buzzer configuration
+ * Active buzzer has built-in oscillator, only needs DC power
+ * This buzzer is LOW level triggered (low = ON, high = OFF)
+ */
+#define BUZZER_ACTIVE_LOW       1       /* 1 = low level trigger, 0 = high level trigger */
 
 /* Alarm patterns */
 #define ALARM_CONTINUOUS        0       /* Continuous beep */

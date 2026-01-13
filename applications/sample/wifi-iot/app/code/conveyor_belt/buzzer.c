@@ -17,7 +17,6 @@
 #include <unistd.h>
 #include "wifiiot_gpio.h"
 #include "wifiiot_gpio_ex.h"
-#include "wifiiot_pwm.h"
 #include "wifiiot_errno.h"
 #include "buzzer.h"
 
@@ -27,14 +26,17 @@ static int g_alarmActive = 0;
 
 void Buzzer_Init(void)
 {
-    /* Initialize PWM pin for buzzer */
-    IoSetFunc(BUZZER_GPIO, WIFI_IOT_IO_FUNC_GPIO_9_PWM0_OUT);
-    PwmInit(BUZZER_PWM_PORT);
+    /* Initialize GPIO for active buzzer (low level triggered) */
+    IoSetFunc(BUZZER_GPIO, WIFI_IOT_IO_FUNC_GPIO_9_GPIO);
+    GpioSetDir(BUZZER_GPIO, WIFI_IOT_GPIO_DIR_OUT);
+    
+    /* Start with buzzer OFF (HIGH for low-level triggered buzzer) */
+    GpioSetOutputVal(BUZZER_GPIO, WIFI_IOT_GPIO_VALUE1);
 
     g_isMuted = 0;
     g_alarmActive = 0;
 
-    printf("[Buzzer] Initialized\r\n");
+    printf("[Buzzer] Active buzzer initialized (low level triggered)\r\n");
 }
 
 void Buzzer_On(void)
@@ -43,12 +45,14 @@ void Buzzer_On(void)
         return;
     }
 
-    PwmStart(BUZZER_PWM_PORT, BUZZER_DUTY, BUZZER_FREQ);
+    /* Low level triggers the active buzzer */
+    GpioSetOutputVal(BUZZER_GPIO, WIFI_IOT_GPIO_VALUE0);
 }
 
 void Buzzer_Off(void)
 {
-    PwmStop(BUZZER_PWM_PORT);
+    /* High level turns off the active buzzer */
+    GpioSetOutputVal(BUZZER_GPIO, WIFI_IOT_GPIO_VALUE1);
 }
 
 void Buzzer_Alarm(uint8_t pattern)
