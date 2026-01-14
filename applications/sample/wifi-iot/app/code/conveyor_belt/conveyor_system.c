@@ -201,9 +201,19 @@ void ConveyorSystem_Task(void)
 
     taskCounter++;
 
+    /* Debug output every 2 seconds */
+    if (taskCounter % 4 == 0) {
+        printf("[Task] Loop #%lu\r\n", (unsigned long)taskCounter);
+    }
+
     /* Read weight sensor */
     g_state.currentWeight = HX711_GetWeight();
     g_state.isOverweight = (g_state.currentWeight > g_state.weightThreshold) ? 1 : 0;
+
+    /* Debug: print weight every 2 seconds */
+    if (taskCounter % 4 == 0) {
+        printf("[Sensor] Weight: %.1fg\r\n", g_state.currentWeight);
+    }
 
     /* Read temperature/humidity sensor (every 2 seconds - DHT11 minimum interval) */
     if (taskCounter % 4 == 0) {
@@ -211,6 +221,7 @@ void ConveyorSystem_Task(void)
         if (DHT11_Read(&temp, &hum) == 0) {
             g_state.currentTemp = temp;
             g_state.currentHumidity = hum;
+            printf("[Sensor] Temp: %.1fC, Humidity: %.1f%%\r\n", temp, hum);
         }
     }
     g_state.isOverheated = (g_state.currentTemp > g_state.tempThreshold) ? 1 : 0;

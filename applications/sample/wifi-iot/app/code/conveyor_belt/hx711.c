@@ -42,6 +42,7 @@ unsigned long HX711_ReadRaw(void)
     unsigned long value = 0;
     unsigned char i = 0;
     WifiIotGpioValue input = WIFI_IOT_GPIO_VALUE0;
+    int timeout = 0;
 
     usleep(2);
 
@@ -49,11 +50,17 @@ unsigned long HX711_ReadRaw(void)
     GpioSetOutputVal(HX711_SCK_GPIO, WIFI_IOT_GPIO_VALUE0);
     usleep(2);
 
-    /* Wait for ADC conversion to complete (DT goes low) */
+    /* Wait for ADC conversion to complete (DT goes low) with timeout */
     GpioGetInputVal(HX711_DT_GPIO, &input);
-    while (input == WIFI_IOT_GPIO_VALUE1) {
+    while (input == WIFI_IOT_GPIO_VALUE1 && timeout < 100000) {
         GpioGetInputVal(HX711_DT_GPIO, &input);
-        usleep(1);
+        usleep(10);
+        timeout += 10;
+    }
+    
+    /* Return 0 if timeout - sensor not ready */
+    if (timeout >= 100000) {
+        return 0;
     }
 
     /* Read 24 bits of data */
