@@ -88,7 +88,8 @@ int WiFi_Connect(void)
         return -1;
     }
 
-    sleep(3);
+    /* Reduced wait time for WiFi connection (from 3s to 1s) */
+    sleep(1);
 
     /* Get IP address via DHCP */
     struct netif *iface = netifapi_netif_find("wlan0");
@@ -98,7 +99,8 @@ int WiFi_Connect(void)
             printf("[WiFi] DHCP failed: %d\r\n", ret);
             return -1;
         }
-        sleep(5);
+        /* Reduced DHCP wait time (from 5s to 2s) */
+        sleep(2);
     }
 
     g_wifiConnected = 1;

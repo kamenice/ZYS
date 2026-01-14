@@ -53,6 +53,24 @@ static int g_prevOverweight = 0;
 static int g_prevOverheat = 0;
 static int g_prevJam = 0;
 
+/* WiFi connection status */
+static int g_wifiInitialized = 0;
+
+/* WiFi initialization task - runs in background to avoid blocking */
+static void WiFi_InitTask(void)
+{
+    if (WiFi_Init() == 0) {
+        if (WiFi_Connect() == 0) {
+            MQTT_Init();
+            if (MQTT_Connect() == 0) {
+                MQTT_SubscribeControl();
+                g_wifiInitialized = 1;
+                printf("[WiFi] Connection established in background\r\n");
+            }
+        }
+    }
+}
+
 void ConveyorSystem_Init(void)
 {
     printf("[ConveyorSystem] Initializing...\r\n");
@@ -60,7 +78,7 @@ void ConveyorSystem_Init(void)
     /* Initialize GPIO */
     GpioInit();
 
-    /* Initialize all sensors */
+    /* Initialize all sensors (fast operations) */
     HX711_Init();
     DHT11_Init();
     Infrared_Init();
@@ -83,18 +101,14 @@ void ConveyorSystem_Init(void)
                         ConveyorSystem_ButtonCallback,
                         NULL);
 
-    /* Calibrate weight sensor */
+    /* Calibrate weight sensor (reduced delay) */
     HX711_Calibrate();
 
-    /* Initialize WiFi and MQTT */
-    if (WiFi_Init() == 0) {
-        if (WiFi_Connect() == 0) {
-            MQTT_Init();
-            if (MQTT_Connect() == 0) {
-                MQTT_SubscribeControl();
-            }
-        }
-    }
+    printf("[ConveyorSystem] Local initialization complete\r\n");
+
+    /* Initialize WiFi and MQTT in background (non-blocking) */
+    printf("[ConveyorSystem] Starting WiFi connection...\r\n");
+    WiFi_InitTask();
 
     printf("[ConveyorSystem] Initialization complete\r\n");
 }

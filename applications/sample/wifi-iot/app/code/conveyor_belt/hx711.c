@@ -97,7 +97,7 @@ unsigned long HX711_ReadRaw(void)
 double HX711_GetAveragedReading(void)
 {
     double sum = 0;
-    int samples = 10;
+    int samples = 5; /* Reduced from 10 samples for faster reading */
 
     /* Take multiple samples and average to reduce noise */
     for (int i = 0; i < samples; i++) {
@@ -110,7 +110,7 @@ double HX711_GetAveragedReading(void)
 void HX711_Calibrate(void)
 {
     printf("[HX711] Calibrating... Please ensure scale is empty.\r\n");
-    usleep(1000000); /* Wait 1 second for stable reading */
+    usleep(200000); /* Wait 200ms for stable reading (reduced from 1s) */
     g_baseValue = HX711_GetAveragedReading();
     printf("[HX711] Calibration complete. Base value: %.2f\r\n", g_baseValue);
 }
