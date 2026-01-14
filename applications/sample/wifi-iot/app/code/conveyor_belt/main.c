@@ -36,7 +36,7 @@
 
 #include "conveyor_system.h"
 
-#define MAIN_TASK_STACK_SIZE    8192
+#define MAIN_TASK_STACK_SIZE    4096
 #define MAIN_TASK_PRIORITY      osPriorityNormal
 #define TASK_INTERVAL_MS        500
 
@@ -54,12 +54,13 @@ static void ConveyorMainTask(void *arg)
 {
     (void)arg;
 
-    printf("==========================================\r\n");
+    printf("\r\n==========================================\r\n");
     printf("  Conveyor Belt Intelligent System\r\n");
     printf("  Platform: Hi3861\r\n");
     printf("==========================================\r\n");
 
     /* Initialize the conveyor belt system */
+    printf("[Main] Starting initialization...\r\n");
     ConveyorSystem_Init();
 
     printf("[Main] System ready. Starting main loop...\r\n");
@@ -70,7 +71,7 @@ static void ConveyorMainTask(void *arg)
         ConveyorSystem_Task();
 
         /* Task interval delay */
-        usleep(TASK_INTERVAL_MS * 1000);
+        sleep(1);
     }
 }
 
@@ -83,6 +84,8 @@ static void ConveyorApp(void)
 {
     osThreadAttr_t attr;
 
+    printf("\r\n[ConveyorApp] Application starting...\r\n");
+
     attr.name = "ConveyorMainTask";
     attr.attr_bits = 0U;
     attr.cb_mem = NULL;
@@ -93,6 +96,8 @@ static void ConveyorApp(void)
 
     if (osThreadNew((osThreadFunc_t)ConveyorMainTask, NULL, &attr) == NULL) {
         printf("[Main] Failed to create ConveyorMainTask!\r\n");
+    } else {
+        printf("[ConveyorApp] Task created successfully\r\n");
     }
 }
 

@@ -76,23 +76,33 @@ void ConveyorSystem_Init(void)
     printf("[ConveyorSystem] Initializing...\r\n");
 
     /* Initialize GPIO */
+    printf("[ConveyorSystem] Init GPIO...\r\n");
     GpioInit();
 
     /* Initialize all sensors (fast operations) */
+    printf("[ConveyorSystem] Init HX711...\r\n");
     HX711_Init();
+    printf("[ConveyorSystem] Init DHT11...\r\n");
     DHT11_Init();
+    printf("[ConveyorSystem] Init Infrared...\r\n");
     Infrared_Init();
+    printf("[ConveyorSystem] Init HallSensor...\r\n");
     HallSensor_Init();
 
     /* Initialize actuators */
+    printf("[ConveyorSystem] Init Motor...\r\n");
     Motor_Init();
+    printf("[ConveyorSystem] Init Servo...\r\n");
     Servo_Init();
+    printf("[ConveyorSystem] Init Buzzer...\r\n");
     Buzzer_Init();
 
     /* Initialize display */
+    printf("[ConveyorSystem] Init OLED...\r\n");
     OLED_DisplayInit();
 
     /* Initialize button for manual control */
+    printf("[ConveyorSystem] Init Button...\r\n");
     IoSetFunc(BUTTON_GPIO, WIFI_IOT_IO_FUNC_GPIO_3_GPIO);
     GpioSetDir(BUTTON_GPIO, WIFI_IOT_GPIO_DIR_IN);
     GpioRegisterIsrFunc(BUTTON_GPIO,
@@ -102,11 +112,12 @@ void ConveyorSystem_Init(void)
                         NULL);
 
     /* Calibrate weight sensor (reduced delay) */
+    printf("[ConveyorSystem] Calibrating HX711...\r\n");
     HX711_Calibrate();
 
     printf("[ConveyorSystem] Local initialization complete\r\n");
 
-    /* Initialize WiFi and MQTT in background (non-blocking) */
+    /* Initialize WiFi and MQTT */
     printf("[ConveyorSystem] Starting WiFi connection...\r\n");
     WiFi_InitTask();
 
@@ -201,28 +212,23 @@ void ConveyorSystem_Task(void)
 
     taskCounter++;
 
-    /* Debug output every 2 seconds */
-    if (taskCounter % 4 == 0) {
-        printf("[Task] Loop #%lu\r\n", (unsigned long)taskCounter);
-    }
+    /* Debug output every loop */
+    printf("[Task] Loop #%lu\r\n", (unsigned long)taskCounter);
 
     /* Read weight sensor */
     g_state.currentWeight = HX711_GetWeight();
     g_state.isOverweight = (g_state.currentWeight > g_state.weightThreshold) ? 1 : 0;
-
-    /* Debug: print weight every 2 seconds */
-    if (taskCounter % 4 == 0) {
-        printf("[Sensor] Weight: %.1fg\r\n", g_state.currentWeight);
-    }
+    printf("[Sensor] Weight: %.1fg\r\n", g_state.currentWeight);
 
     /* Read temperature/humidity sensor (every 2 seconds - DHT11 minimum interval) */
-    if (taskCounter % 4 == 0) {
+    if (taskCounter % 2 == 0) {
         float temp, hum;
         if (DHT11_Read(&temp, &hum) == 0) {
             g_state.currentTemp = temp;
             g_state.currentHumidity = hum;
-            printf("[Sensor] Temp: %.1fC, Humidity: %.1f%%\r\n", temp, hum);
         }
+        printf("[Sensor] Temp: %.1fC, Humidity: %.1f%%\r\n", 
+               g_state.currentTemp, g_state.currentHumidity);
     }
     g_state.isOverheated = (g_state.currentTemp > g_state.tempThreshold) ? 1 : 0;
 
@@ -298,7 +304,7 @@ void ConveyorSystem_Task(void)
                        g_state.currentSpeedRPM, g_state.runTimeSeconds);
 
     /* Publish status via MQTT (every 2 seconds) */
-    if (taskCounter - lastStatusPublish >= 4) {
+    if (taskCounter - lastStatusPublish >= 2) {
         MQTT_PublishStatus(g_state.currentWeight, g_state.currentTemp,
                           g_state.currentSpeedRPM, g_state.isRunning,
                           g_state.runTimeSeconds);

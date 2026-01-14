@@ -19,6 +19,7 @@
 
 #include "wifi_device.h"
 #include "lwip/netifapi.h"
+#include "lwip/api_shell.h"
 #include "lwip/ip_addr.h"
 #include "lwip/sockets.h"
 #include "MQTTPacket.h"
@@ -62,6 +63,8 @@ int WiFi_Connect(void)
     WifiDeviceConfig apConfig = {0};
     int netId = -1;
 
+    printf("[WiFi] Connecting to %s...\r\n", WIFI_SSID);
+
     /* Configure WiFi connection */
     strcpy(apConfig.ssid, WIFI_SSID);
     strcpy(apConfig.preSharedKey, WIFI_PASSWORD);
@@ -81,26 +84,30 @@ int WiFi_Connect(void)
         printf("[WiFi] AddDeviceConfig failed: %d\r\n", errCode);
         return -1;
     }
+    printf("[WiFi] AddDeviceConfig: %d, netId: %d\r\n", errCode, netId);
 
     errCode = ConnectTo(netId);
     if (errCode != WIFI_SUCCESS) {
         printf("[WiFi] ConnectTo failed: %d\r\n", errCode);
         return -1;
     }
+    printf("[WiFi] ConnectTo(%d): %d\r\n", netId, errCode);
 
-    /* Reduced wait time for WiFi connection (from 3s to 1s) */
-    sleep(1);
+    /* Wait for WiFi connection (following reference code pattern) */
+    sleep(3);
 
     /* Get IP address via DHCP */
     struct netif *iface = netifapi_netif_find("wlan0");
     if (iface) {
         err_t ret = netifapi_dhcp_start(iface);
-        if (ret != ERR_OK) {
-            printf("[WiFi] DHCP failed: %d\r\n", ret);
-            return -1;
-        }
-        /* Reduced DHCP wait time (from 5s to 2s) */
-        sleep(2);
+        printf("[WiFi] netifapi_dhcp_start: %d\r\n", ret);
+
+        /* Wait for DHCP (following reference code pattern) */
+        sleep(5);
+
+        /* Print IP address */
+        ret = netifapi_netif_common(iface, dhcp_clients_info_show, NULL);
+        printf("[WiFi] netifapi_netif_common: %d\r\n", ret);
     }
 
     g_wifiConnected = 1;
