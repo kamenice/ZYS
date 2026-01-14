@@ -58,13 +58,17 @@
 |------|------|----------|
 | 压力传感器 | HX711 | DT: GPIO11, SCK: GPIO12 |
 | 温湿度传感器 | DHT11 | GPIO7 |
-| 红外避障传感器 | YL-62 | GPIO5 |
+| 红外避障传感器 | YL-62 | GPIO4 |
 | 霍尔传感器 | 3411 | GPIO8 |
-| 舵机 | SG90 | GPIO2 (PWM2) |
-| 电机驱动 | TB6612FNG | PWMA: GPIO10, AIN1: GPIO6, AIN2: GPIO0, STBY: GPIO1 |
-| 蜂鸣器 | - | GPIO9 (PWM0) |
+| 舵机 | SG90 | GPIO5 (PWM3) |
+| 电机驱动 | TB6612FNG | PWMA: GPIO10, AIN1: GPIO6, AIN2: GPIO1, STBY: 接VCC |
+| 蜂鸣器(有源低电平) | - | GPIO9 |
 | OLED显示屏 | SSD1306 | I2C0 (SDA: GPIO13, SCL: GPIO14) |
-| 用户按键 | - | GPIO14 |
+| 用户按键 | - | GPIO3 |
+
+**注意**: 
+- GPIO0和GPIO2已保留，不使用
+- TB6612FNG的STBY引脚需要在硬件上连接到VCC以保持常开状态
 
 ## MQTT主题
 

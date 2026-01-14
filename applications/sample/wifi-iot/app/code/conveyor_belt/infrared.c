@@ -26,7 +26,7 @@ static int g_jamCounter = 0;
 void Infrared_Init(void)
 {
     /* Initialize GPIO for YL-62 infrared sensor (digital output) */
-    IoSetFunc(INFRARED_GPIO, WIFI_IOT_IO_FUNC_GPIO_5_GPIO);
+    IoSetFunc(INFRARED_GPIO, WIFI_IOT_IO_FUNC_GPIO_4_GPIO);
     GpioSetDir(INFRARED_GPIO, WIFI_IOT_GPIO_DIR_IN);
 
     g_jamCounter = 0;

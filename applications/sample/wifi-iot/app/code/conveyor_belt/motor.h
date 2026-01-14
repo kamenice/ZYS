@@ -21,8 +21,8 @@
 /* TB6612FNG Motor Driver GPIO Pin Definitions */
 #define MOTOR_PWMA_GPIO         WIFI_IOT_GPIO_IDX_10  /* PWM pin (GPIO10/PWM1) */
 #define MOTOR_AIN1_GPIO         WIFI_IOT_GPIO_IDX_6   /* Direction pin 1 (GPIO6) */
-#define MOTOR_AIN2_GPIO         WIFI_IOT_GPIO_IDX_0   /* Direction pin 2 (GPIO0) */
-#define MOTOR_STBY_GPIO         WIFI_IOT_GPIO_IDX_1   /* Standby pin (GPIO1) */
+#define MOTOR_AIN2_GPIO         WIFI_IOT_GPIO_IDX_1   /* Direction pin 2 (GPIO1) */
+/* Note: STBY pin should be connected to VCC in hardware for always-on operation */
 
 /* Motor PWM configuration */
 #define MOTOR_PWM_PORT          WIFI_IOT_PWM_PORT_PWM1
@@ -61,11 +61,5 @@ uint8_t Motor_GetSpeed(void);
  * @return 1 if running, 0 if stopped
  */
 int Motor_IsRunning(void);
-
-/**
- * @brief Enable/disable motor standby mode
- * @param enable 1 to enable standby, 0 to disable
- */
-void Motor_SetStandby(int enable);
 
 #endif /* MOTOR_H */

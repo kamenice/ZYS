@@ -24,7 +24,7 @@
 void Servo_Init(void)
 {
     /* Initialize PWM pin for servo control */
-    IoSetFunc(SERVO_GPIO, WIFI_IOT_IO_FUNC_GPIO_2_PWM2_OUT);
+    IoSetFunc(SERVO_GPIO, WIFI_IOT_IO_FUNC_GPIO_5_PWM2_OUT);
     PwmInit(SERVO_PWM_PORT);
 
     printf("[Servo] SG90 servo initialized\r\n");

@@ -19,8 +19,8 @@
 #include <stdint.h>
 
 /* SG90 Servo GPIO Pin Definition */
-#define SERVO_GPIO              WIFI_IOT_GPIO_IDX_2   /* PWM pin (GPIO2/PWM2) */
-#define SERVO_PWM_PORT          WIFI_IOT_PWM_PORT_PWM2
+#define SERVO_GPIO              WIFI_IOT_GPIO_IDX_5   /* PWM pin (GPIO5/PWM3) */
+#define SERVO_PWM_PORT          WIFI_IOT_PWM_PORT_PWM3
 
 /* SG90 Servo PWM Parameters
  * SG90 operates at 50Hz (20ms period)

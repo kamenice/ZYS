@@ -36,14 +36,11 @@ void Motor_Init(void)
     GpioSetDir(MOTOR_AIN1_GPIO, WIFI_IOT_GPIO_DIR_OUT);
     GpioSetOutputVal(MOTOR_AIN1_GPIO, WIFI_IOT_GPIO_VALUE1);
 
-    IoSetFunc(MOTOR_AIN2_GPIO, WIFI_IOT_IO_FUNC_GPIO_0_GPIO);
+    IoSetFunc(MOTOR_AIN2_GPIO, WIFI_IOT_IO_FUNC_GPIO_1_GPIO);
     GpioSetDir(MOTOR_AIN2_GPIO, WIFI_IOT_GPIO_DIR_OUT);
     GpioSetOutputVal(MOTOR_AIN2_GPIO, WIFI_IOT_GPIO_VALUE0);
 
-    /* Initialize standby pin (active low) */
-    IoSetFunc(MOTOR_STBY_GPIO, WIFI_IOT_IO_FUNC_GPIO_1_GPIO);
-    GpioSetDir(MOTOR_STBY_GPIO, WIFI_IOT_GPIO_DIR_OUT);
-    GpioSetOutputVal(MOTOR_STBY_GPIO, WIFI_IOT_GPIO_VALUE0); /* Start in standby */
+    /* Note: STBY pin should be connected to VCC in hardware for always-on operation */
 
     g_isRunning = 0;
     g_speed = MOTOR_DEFAULT_SPEED;
@@ -56,9 +53,6 @@ void Motor_Start(void)
     if (g_isRunning) {
         return;
     }
-
-    /* Exit standby mode */
-    GpioSetOutputVal(MOTOR_STBY_GPIO, WIFI_IOT_GPIO_VALUE1);
 
     /* Set direction (forward only) */
     GpioSetOutputVal(MOTOR_AIN1_GPIO, WIFI_IOT_GPIO_VALUE1);
@@ -80,9 +74,6 @@ void Motor_Stop(void)
 
     /* Stop PWM */
     PwmStop(MOTOR_PWM_PORT);
-
-    /* Enter standby mode */
-    GpioSetOutputVal(MOTOR_STBY_GPIO, WIFI_IOT_GPIO_VALUE0);
 
     g_isRunning = 0;
     printf("[Motor] Stopped\r\n");
@@ -114,13 +105,4 @@ uint8_t Motor_GetSpeed(void)
 int Motor_IsRunning(void)
 {
     return g_isRunning;
-}
-
-void Motor_SetStandby(int enable)
-{
-    if (enable) {
-        GpioSetOutputVal(MOTOR_STBY_GPIO, WIFI_IOT_GPIO_VALUE0);
-    } else {
-        GpioSetOutputVal(MOTOR_STBY_GPIO, WIFI_IOT_GPIO_VALUE1);
-    }
 }
