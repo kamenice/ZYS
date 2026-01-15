@@ -3,8 +3,14 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * Description: Smart Conveyor Belt System - Servo Motor Control Implementation
  * 
- * PWM frequency for servo: 50Hz (20ms period)
- * Duty cycle range: 2.5% (0.5ms) to 12.5% (2.5ms)
+ * Servo PWM control using GPIO bit-banging:
+ * - 20ms period (50Hz)
+ * - 0.5ms pulse = 0 degrees
+ * - 1.5ms pulse = 90 degrees (center)
+ * - 2.5ms pulse = 180 degrees
+ * 
+ * Note: Hardware PWM cannot achieve 50Hz with 16-bit divisor (160MHz/65535 > 2kHz),
+ * so we use software GPIO control instead.
  */
 
 #include <stdio.h>
@@ -13,54 +19,60 @@
 #include "cmsis_os2.h"
 #include "wifiiot_gpio.h"
 #include "wifiiot_gpio_ex.h"
-#include "wifiiot_pwm.h"
 #include "servo_control.h"
 
-/* GPIO/PWM Pin Definition for Servo */
+/* GPIO Pin Definition for Servo */
 #define SERVO_PIN       WIFI_IOT_IO_NAME_GPIO_10
-#define SERVO_PWM_PORT  WIFI_IOT_PWM_PORT_PWM1
+#define SERVO_IDX       WIFI_IOT_GPIO_IDX_10
 
-/* PWM clock frequency (Hz) */
-#define PWM_CLK_FREQ    160000000
-/* PWM frequency for servo (50Hz = 20ms period) */
-#define SERVO_FREQ      50
-/* PWM period divisor */
-#define SERVO_PERIOD_DIVISOR    (PWM_CLK_FREQ / SERVO_FREQ)
+/* Servo timing constants (microseconds) */
+#define SERVO_PERIOD_US     20000   /* 20ms period */
+#define SERVO_MIN_PULSE_US  500     /* 0.5ms for 0 degrees */
+#define SERVO_MAX_PULSE_US  2500    /* 2.5ms for 180 degrees */
 
 /* Global variable (volatile for thread safety) */
 static volatile int g_isVibrating = 0;
 
-/* Convert angle to PWM duty cycle
- * 0 degrees = 0.5ms = 2.5% duty
- * 180 degrees = 2.5ms = 12.5% duty
- * Duty = (angle / 180) * 10% + 2.5%
- */
-static uint16_t AngleToDuty(int angle)
+/* Convert angle to pulse width in microseconds */
+static uint32_t AngleToPulseUs(int angle)
 {
     if (angle < 0) angle = 0;
     if (angle > 180) angle = 180;
     
-    /* Calculate duty cycle in microseconds (500us to 2500us) */
-    uint32_t pulseWidth = 500 + (angle * 2000 / 180);
-    
-    /* Convert to PWM divisor (20ms period) */
-    uint32_t duty = (pulseWidth * SERVO_PERIOD_DIVISOR) / 20000;
-    
-    return (uint16_t)duty;
+    /* Linear interpolation: 0° -> 500us, 180° -> 2500us */
+    return SERVO_MIN_PULSE_US + (angle * (SERVO_MAX_PULSE_US - SERVO_MIN_PULSE_US) / 180);
 }
 
 void Servo_Init(void)
 {
     GpioInit();
-    IoSetFunc(SERVO_PIN, WIFI_IOT_IO_FUNC_GPIO_10_PWM1_OUT);
-    PwmInit(SERVO_PWM_PORT);
+    IoSetFunc(SERVO_PIN, WIFI_IOT_IO_FUNC_GPIO_10_GPIO);
+    GpioSetDir(SERVO_IDX, WIFI_IOT_GPIO_DIR_OUT);
+    GpioSetOutputVal(SERVO_IDX, 0);
+}
+
+/* Generate one PWM pulse for servo */
+static void Servo_GeneratePulse(uint32_t pulseUs)
+{
+    /* High pulse */
+    GpioSetOutputVal(SERVO_IDX, 1);
+    usleep(pulseUs);
+    
+    /* Low for remainder of period */
+    GpioSetOutputVal(SERVO_IDX, 0);
+    usleep(SERVO_PERIOD_US - pulseUs);
 }
 
 void Servo_SetAngle(int angle)
 {
-    uint16_t duty = AngleToDuty(angle);
-    PwmStart(SERVO_PWM_PORT, duty, SERVO_PERIOD_DIVISOR);
-    printf("[Servo] Set angle to %d degrees\n", angle);
+    uint32_t pulseUs = AngleToPulseUs(angle);
+    
+    /* Generate several pulses to ensure servo reaches position */
+    for (int i = 0; i < 10; i++) {
+        Servo_GeneratePulse(pulseUs);
+    }
+    
+    printf("[Servo] Set angle to %d degrees (pulse: %u us)\n", angle, pulseUs);
 }
 
 void Servo_Vibrate(void)
@@ -85,7 +97,7 @@ void Servo_Vibrate(void)
 void Servo_Stop(void)
 {
     g_isVibrating = 0;
-    PwmStop(SERVO_PWM_PORT);
+    GpioSetOutputVal(SERVO_IDX, 0);
 }
 
 int Servo_IsVibrating(void)
