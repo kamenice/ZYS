@@ -26,7 +26,7 @@ uint32_t OledInit(void);
 /**
  * @brief Set cursor position
  *
- * @param x the horizontal posistion of cursor
+ * @param x the horizontal position of cursor
  * @param y the vertical position of cursor
  */
 void OledSetPosition(uint8_t x, uint8_t y);

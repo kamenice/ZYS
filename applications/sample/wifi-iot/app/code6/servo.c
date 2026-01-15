@@ -73,8 +73,8 @@ void Servo_SetAngle(int angle)
                    (angle * (SERVO_MAX_PULSE_US - SERVO_MIN_PULSE_US)) / 180;
 
     // Generate PWM signal using software timing
-    // Send multiple pulses for smooth movement
-    for (int i = 0; i < 25; i++) {  // 25 cycles = 500ms of PWM
+    // Send multiple pulses for smooth movement (reduced to minimize blocking)
+    for (int i = 0; i < 10; i++) {  // 10 cycles = 200ms of PWM
         // High pulse
         GpioSetOutputVal(SERVO_GPIO, WIFI_IOT_GPIO_VALUE1);
         usleep(pulse_us);

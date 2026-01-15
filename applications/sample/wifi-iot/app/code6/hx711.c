@@ -107,6 +107,7 @@ double HX711_GetAverageRead(void)
 
     for (int i = 0; i < count; i++) {
         sum += HX711_Read();
+        usleep(10000); // 10ms delay between readings for more accurate averaging
     }
 
     return sum / count;
