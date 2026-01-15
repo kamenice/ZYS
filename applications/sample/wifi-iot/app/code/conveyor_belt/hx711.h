@@ -19,7 +19,9 @@
 #include <stdint.h>
 
 /* HX711 GPIO Pin Definitions */
-#define HX711_DT_GPIO           WIFI_IOT_GPIO_IDX_11   /* Data pin (GPIO11) */
+/* Note: GPIO11 is now used by Hall sensor, moved DT to GPIO4 */
+/* Warning: GPIO4 is shared with UART0_RXD - may conflict with debug serial input */
+#define HX711_DT_GPIO           WIFI_IOT_GPIO_IDX_4    /* Data pin (GPIO4) */
 #define HX711_SCK_GPIO          WIFI_IOT_GPIO_IDX_12   /* Clock pin (GPIO12) */
 
 /* Calibration factor - adjust based on your load cell */

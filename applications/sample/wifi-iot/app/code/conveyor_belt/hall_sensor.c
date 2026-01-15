@@ -35,7 +35,7 @@ static void HallSensor_ISR(char *arg)
 void HallSensor_Init(void)
 {
     /* Initialize GPIO for 3411 Hall effect sensor */
-    IoSetFunc(HALL_SENSOR_GPIO, WIFI_IOT_IO_FUNC_GPIO_8_GPIO);
+    IoSetFunc(HALL_SENSOR_GPIO, WIFI_IOT_IO_FUNC_GPIO_11_GPIO);
     GpioSetDir(HALL_SENSOR_GPIO, WIFI_IOT_GPIO_DIR_IN);
 
     /* Register interrupt for rising edge (magnet passes) */
@@ -49,7 +49,7 @@ void HallSensor_Init(void)
     g_lastPulseCount = 0;
     g_speedRPM = 0.0f;
 
-    printf("[Hall Sensor] 3411 sensor initialized\r\n");
+    printf("[Hall Sensor] 3411 sensor initialized on GPIO11\r\n");
 }
 
 uint32_t HallSensor_GetPulseCount(void)

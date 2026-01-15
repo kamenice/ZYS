@@ -99,8 +99,11 @@ void ConveyorSystem_Init(void)
     printf("[ConveyorSystem] Init OLED...\r\n");
     OLED_DisplayInit();
 
-    /* Initialize button for manual control */
-    printf("[ConveyorSystem] Init Button...\r\n");
+    /* Note: User button on GPIO3 is disabled because GPIO3 is used for UART0_TXD (debug serial)
+     * Use MQTT remote control instead
+     */
+    printf("[ConveyorSystem] Button disabled (GPIO3 conflicts with UART0)\r\n");
+    /* Button initialization disabled to preserve debug serial output
     IoSetFunc(BUTTON_GPIO, WIFI_IOT_IO_FUNC_GPIO_3_GPIO);
     GpioSetDir(BUTTON_GPIO, WIFI_IOT_GPIO_DIR_IN);
     GpioRegisterIsrFunc(BUTTON_GPIO,
@@ -108,6 +111,7 @@ void ConveyorSystem_Init(void)
                         WIFI_IOT_GPIO_EDGE_FALL_LEVEL_LOW,
                         ConveyorSystem_ButtonCallback,
                         NULL);
+    */
 
     /* Calibrate weight sensor (reduced delay) */
     printf("[ConveyorSystem] Calibrating HX711...\r\n");

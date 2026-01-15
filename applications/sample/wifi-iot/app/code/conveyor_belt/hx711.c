@@ -26,7 +26,8 @@ static double g_baseValue = 0;
 void HX711_Init(void)
 {
     /* Initialize GPIO for HX711 DT pin (data input) */
-    IoSetFunc(HX711_DT_GPIO, WIFI_IOT_IO_FUNC_GPIO_11_GPIO);
+    /* Note: GPIO4 is shared with UART0_RXD - may conflict with debug serial input */
+    IoSetFunc(HX711_DT_GPIO, WIFI_IOT_IO_FUNC_GPIO_4_GPIO);
     GpioSetDir(HX711_DT_GPIO, WIFI_IOT_GPIO_DIR_IN);
 
     /* Initialize GPIO for HX711 SCK pin (clock output) */
@@ -34,7 +35,7 @@ void HX711_Init(void)
     GpioSetDir(HX711_SCK_GPIO, WIFI_IOT_GPIO_DIR_OUT);
     GpioSetOutputVal(HX711_SCK_GPIO, WIFI_IOT_GPIO_VALUE0);
 
-    printf("[HX711] Initialized\r\n");
+    printf("[HX711] Initialized on GPIO4 (DT) and GPIO12 (SCK)\r\n");
 }
 
 unsigned long HX711_ReadRaw(void)

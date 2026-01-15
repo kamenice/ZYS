@@ -19,7 +19,9 @@
 #include <stdint.h>
 
 /* 3411 Hall Effect Sensor GPIO Pin Definition */
-#define HALL_SENSOR_GPIO        WIFI_IOT_GPIO_IDX_8   /* Digital output pin (GPIO8) */
+/* Note: GPIO8 is now used by infrared sensor, moved to GPIO11 */
+/* This may conflict with HX711 DT pin - can share if not used simultaneously */
+#define HALL_SENSOR_GPIO        WIFI_IOT_GPIO_IDX_11   /* Digital input pin (GPIO11) */
 
 /* Speed calculation parameters */
 #define HALL_PULSES_PER_REV     1       /* Number of magnets on the shaft */

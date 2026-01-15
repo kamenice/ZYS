@@ -19,7 +19,8 @@
 #include <stdint.h>
 
 /* YL-62 Infrared Obstacle Sensor GPIO Pin Definition */
-#define INFRARED_GPIO           WIFI_IOT_GPIO_IDX_4   /* Digital output pin (GPIO4) */
+/* Note: GPIO4 conflicts with UART0_RXD (debug serial), so we use GPIO8 instead */
+#define INFRARED_GPIO           WIFI_IOT_GPIO_IDX_8   /* Digital input pin (GPIO8) */
 
 /* Jam detection parameters */
 #define JAM_DETECTION_COUNT     3       /* Number of consecutive detections to confirm jam */
