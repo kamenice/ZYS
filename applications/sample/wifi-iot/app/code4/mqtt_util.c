@@ -121,9 +121,9 @@ void mqtt_publish_status(void)
     float temp = DHT11_GetTemperature();
     float humidity = DHT11_GetHumidity();
     int jam = IR_IsJamDetected();
-    uint32_t rpm = Hall_GetRPM();
+    unsigned int rpm = (unsigned int)Hall_GetRPM();
     int running = Motor_IsRunning();
-    uint32_t runTime = Conveyor_GetRunTime();
+    unsigned int runTime = (unsigned int)Conveyor_GetRunTime();
     int overweight = HX711_IsOverweight();
     int overheat = DHT11_IsOverheating();
 
@@ -202,6 +202,13 @@ static void mqtt_receive_loop(void)
 
         MQTTDeserialize_publish(&dup, &qos, &retained, &packetid, &receivedTopic,
                                 &payload_in, &payloadlen_in, buf, buflen);
+
+        /* Suppress unused variable warnings */
+        (void)dup;
+        (void)qos;
+        (void)retained;
+        (void)packetid;
+        (void)receivedTopic;
 
         /* Process received command */
         char cmd[100] = {0};
