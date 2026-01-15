@@ -67,8 +67,8 @@ void Servo_SetAngle(int angle)
 {
     uint32_t pulseUs = AngleToPulseUs(angle);
     
-    /* Generate several pulses to ensure servo reaches position */
-    for (int i = 0; i < 10; i++) {
+    /* Generate a few pulses to move servo to position */
+    for (int i = 0; i < 3; i++) {
         Servo_GeneratePulse(pulseUs);
     }
     
