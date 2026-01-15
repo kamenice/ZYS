@@ -216,10 +216,9 @@ void OLED_DisplayInit(void)
         0xAF, /* Display on */
     };
 
-    /* Initialize I2C */
-    IoSetFunc(WIFI_IOT_GPIO_IDX_13, WIFI_IOT_IO_FUNC_GPIO_13_I2C0_SDA);
-    IoSetFunc(WIFI_IOT_GPIO_IDX_14, WIFI_IOT_IO_FUNC_GPIO_14_I2C0_SCL);
-    I2cInit(OLED_I2C_IDX, 400000);
+    /* Note: I2C is already initialized in main.c I2C_CommonInit()
+     * Do NOT reinitialize here to avoid conflicts
+     */
 
     /* Send initialization commands */
     for (size_t i = 0; i < ARRAY_SIZE(initCmds); i++) {

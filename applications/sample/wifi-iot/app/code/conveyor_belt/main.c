@@ -33,6 +33,9 @@
 
 #include "ohos_init.h"
 #include "cmsis_os2.h"
+#include "wifiiot_gpio.h"
+#include "wifiiot_gpio_ex.h"
+#include "wifiiot_i2c.h"
 
 #include "conveyor_system.h"
 
@@ -76,6 +79,21 @@ static void ConveyorMainTask(void *arg)
 }
 
 /**
+ * @brief Initialize I2C0 with mutex (for OLED and sensors)
+ * Following reference pattern from code_v2.0/ly_charter7
+ */
+static void I2C_CommonInit(void)
+{
+    /* Initialize GPIO */
+    GpioInit();
+
+    /* Initialize I2C0 pins for OLED */
+    IoSetFunc(WIFI_IOT_IO_NAME_GPIO_13, WIFI_IOT_IO_FUNC_GPIO_13_I2C0_SDA);
+    IoSetFunc(WIFI_IOT_IO_NAME_GPIO_14, WIFI_IOT_IO_FUNC_GPIO_14_I2C0_SCL);
+    I2cInit(WIFI_IOT_I2C_IDX_0, 400000); /* 400kHz */
+}
+
+/**
  * @brief Application entry point
  *
  * Creates the main conveyor system task thread
@@ -85,6 +103,9 @@ static void ConveyorApp(void)
     osThreadAttr_t attr;
 
     printf("\r\n[ConveyorApp] Application starting...\r\n");
+
+    /* Initialize I2C0 BEFORE creating thread (following reference pattern) */
+    I2C_CommonInit();
 
     attr.name = "ConveyorMainTask";
     attr.attr_bits = 0U;

@@ -75,9 +75,7 @@ void ConveyorSystem_Init(void)
 {
     printf("[ConveyorSystem] Initializing...\r\n");
 
-    /* Initialize GPIO */
-    printf("[ConveyorSystem] Init GPIO...\r\n");
-    GpioInit();
+    /* Note: GpioInit() and I2C init already done in main.c I2C_CommonInit() */
 
     /* Initialize all sensors (fast operations) */
     printf("[ConveyorSystem] Init HX711...\r\n");
