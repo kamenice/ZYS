@@ -4,7 +4,7 @@
  * Description: Smart Conveyor Belt System - HX711 Pressure Sensor
  * 
  * HX711 24-bit ADC for load cell/pressure sensor
- * Used for weight measurement (0-10kg range) and conveyor start detection
+ * Simplified version: Only detects presence of items (yes/no), no weight calculation
  * 
  * Pin Configuration:
  * - DT (Data): GPIO11
@@ -15,11 +15,6 @@
 #define HX711_SENSOR_H
 
 #include <stdint.h>
-
-/* Weight threshold for overweight detection (kg) */
-#define WEIGHT_OVERLOAD_THRESHOLD   8.0f
-/* Weight threshold to detect item presence on conveyor (kg) */
-#define WEIGHT_PRESENCE_THRESHOLD   0.1f
 
 /**
  * @brief Initialize HX711 sensor GPIO pins
@@ -33,13 +28,13 @@ void HX711_Init(void);
 unsigned long HX711_ReadRaw(void);
 
 /**
- * @brief Get calibrated weight reading
- * @return Weight in grams
+ * @brief Get weight reading (disabled - always returns 0)
+ * @return 0 (weight calculation disabled)
  */
 float HX711_GetWeight(void);
 
 /**
- * @brief Set baseline (tare) weight
+ * @brief Set baseline (tare) value
  */
 void HX711_Tare(void);
 
@@ -50,8 +45,8 @@ void HX711_Tare(void);
 int HX711_IsItemPresent(void);
 
 /**
- * @brief Check if current weight exceeds threshold
- * @return 1 if overweight, 0 otherwise
+ * @brief Check if current weight exceeds threshold (disabled)
+ * @return 0 (overweight detection disabled)
  */
 int HX711_IsOverweight(void);
 

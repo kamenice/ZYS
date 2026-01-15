@@ -3,6 +3,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * Description: Smart Conveyor Belt System - HX711 Pressure Sensor Implementation
  * 
+ * Simplified version: Only detects presence of items (yes/no), no weight calculation
  * Reference: HX711 24-bit ADC datasheet and existing app_demo_hx711.c
  */
 
@@ -20,15 +21,15 @@
 #define HX711_DT_IDX    WIFI_IOT_GPIO_IDX_11
 #define HX711_SCK_IDX   WIFI_IOT_GPIO_IDX_12
 
-/* Calibration factor - adjust based on sensor characteristics */
-/* Increase if measured weight is high, decrease if low */
-#define HX711_CALIBRATION_FACTOR    1300.0f
+/* Threshold for detecting item presence (raw ADC value difference) */
+#define HX711_PRESENCE_THRESHOLD    50000
 
 #define HX711_TASK_STACK_SIZE       4096
 
 /* Global variables (volatile for thread safety) */
-static volatile double g_baseValue = 0.0;
-static volatile float g_currentWeight = 0.0f;
+static volatile unsigned long g_baseValue = 0;
+static volatile unsigned long g_currentReading = 0;
+static volatile int g_itemPresent = 0;
 
 void HX711_Init(void)
 {
@@ -92,11 +93,12 @@ unsigned long HX711_ReadRaw(void)
     return value;
 }
 
-static double HX711_GetAverageReading(int samples)
+static unsigned long HX711_GetAverageReading(int samples)
 {
-    double sum = 0.0;
-    for (int i = 0; i < samples; i++) {
-        sum += (double)HX711_ReadRaw();
+    unsigned long sum = 0;
+    int i = 0;
+    for (i = 0; i < samples; i++) {
+        sum += HX711_ReadRaw();
     }
     return sum / samples;
 }
@@ -104,41 +106,51 @@ static double HX711_GetAverageReading(int samples)
 void HX711_Tare(void)
 {
     g_baseValue = HX711_GetAverageReading(10);
-    printf("[HX711] Tare complete, base value: %.2f\n", g_baseValue);
+    printf("[HX711] Tare complete, base value: %lu\n", g_baseValue);
 }
 
 float HX711_GetWeight(void)
 {
-    return g_currentWeight;
+    /* Weight calculation disabled - just return 0 */
+    /* This function kept for API compatibility */
+    return 0.0f;
 }
 
 int HX711_IsItemPresent(void)
 {
-    return (g_currentWeight > WEIGHT_PRESENCE_THRESHOLD * 1000.0f) ? 1 : 0;
+    return g_itemPresent;
 }
 
 int HX711_IsOverweight(void)
 {
-    return (g_currentWeight > WEIGHT_OVERLOAD_THRESHOLD * 1000.0f) ? 1 : 0;
+    /* Overweight detection disabled - always return 0 */
+    /* This function kept for API compatibility */
+    return 0;
 }
 
 static void HX711_Task(void *arg)
 {
     (void)arg;
+    unsigned long diff = 0;
     
     HX711_Init();
     usleep(100000); /* Wait for sensor to stabilize */
-    HX711_Tare();   /* Set baseline weight */
+    HX711_Tare();   /* Set baseline value */
     
     while (1) {
-        double currentReading = HX711_GetAverageReading(10);
-        g_currentWeight = (float)((currentReading - g_baseValue) / HX711_CALIBRATION_FACTOR);
+        g_currentReading = HX711_GetAverageReading(5);
         
-        if (g_currentWeight < 0) {
-            g_currentWeight = 0;
+        /* Calculate difference from baseline */
+        if (g_currentReading > g_baseValue) {
+            diff = g_currentReading - g_baseValue;
+        } else {
+            diff = g_baseValue - g_currentReading;
         }
         
-        printf("[HX711] Weight: %.2f g\n", g_currentWeight);
+        /* Determine if item is present based on threshold */
+        g_itemPresent = (diff > HX711_PRESENCE_THRESHOLD) ? 1 : 0;
+        
+        printf("[HX711] Item present: %s\n", g_itemPresent ? "YES" : "NO");
         sleep(1);
     }
 }

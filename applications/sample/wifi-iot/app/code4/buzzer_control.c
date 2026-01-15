@@ -4,6 +4,7 @@
  * Description: Smart Conveyor Belt System - Buzzer Control Implementation
  * 
  * Active buzzer: LOW level = ON, HIGH level = OFF
+ * IMPORTANT: Set GPIO HIGH immediately to ensure buzzer is OFF on power-up
  */
 
 #include <stdio.h>
@@ -26,13 +27,22 @@ static osThreadId_t g_intermittentTaskId = NULL;
 void Buzzer_Init(void)
 {
     GpioInit();
+    
+    /* CRITICAL: Set GPIO as output and HIGH FIRST to turn off buzzer */
+    /* This prevents buzzer from sounding during initialization */
     IoSetFunc(BUZZER_PIN, WIFI_IOT_IO_FUNC_GPIO_1_GPIO);
     GpioSetDir(BUZZER_IDX, WIFI_IOT_GPIO_DIR_OUT);
     
-    /* Turn off buzzer initially (HIGH = OFF for active low buzzer) */
+    /* Turn off buzzer immediately (HIGH = OFF for active low buzzer) */
     GpioSetOutputVal(BUZZER_IDX, 1);
     
-    printf("[Buzzer] Buzzer initialized\n");
+    /* Small delay to ensure GPIO state is stable */
+    usleep(1000);
+    
+    /* Ensure buzzer is OFF again after delay */
+    GpioSetOutputVal(BUZZER_IDX, 1);
+    
+    printf("[Buzzer] Buzzer initialized (OFF)\n");
 }
 
 void Buzzer_On(void)

@@ -112,14 +112,13 @@ void mqtt_publish_status(void)
     char payload[200];
     int len = 0;
     int payloadlen = 0;
-    float weight = 0;
+    int itemPresent = 0;
     float temp = 0;
     float humidity = 0;
     int jam = 0;
     unsigned int rpm = 0;
     int running = 0;
     unsigned int runTime = 0;
-    int overweight = 0;
     int overheat = 0;
 
     if (g_mqttSocket < 0) return;
@@ -127,23 +126,22 @@ void mqtt_publish_status(void)
     topicString.cstring = MQTT_TOPIC_STATUS;
 
     /* Get sensor data */
-    weight = HX711_GetWeight();
+    itemPresent = HX711_IsItemPresent();
     temp = DHT11_GetTemperature();
     humidity = DHT11_GetHumidity();
     jam = IR_IsJamDetected();
     rpm = (unsigned int)Hall_GetRPM();
     running = Motor_IsRunning();
     runTime = (unsigned int)Conveyor_GetRunTime();
-    overweight = HX711_IsOverweight();
     overheat = DHT11_IsOverheating();
 
-    /* Format JSON payload */
+    /* Format JSON payload (simplified - no weight/overweight) */
     snprintf(payload, sizeof(payload),
-             "{\"weight\":%.1f,\"temp\":%.1f,\"humidity\":%.1f,"
+             "{\"itemPresent\":%d,\"temp\":%.1f,\"humidity\":%.1f,"
              "\"jam\":%d,\"rpm\":%u,\"running\":%d,"
-             "\"runTime\":%u,\"overweight\":%d,\"overheat\":%d}",
-             weight, temp, humidity, jam, rpm, running,
-             runTime, overweight, overheat);
+             "\"runTime\":%u,\"overheat\":%d}",
+             itemPresent, temp, humidity, jam, rpm, running,
+             runTime, overheat);
 
     payloadlen = strlen(payload);
     len = MQTTSerialize_publish(buf, buflen, 0, 0, 0, 0, topicString, 

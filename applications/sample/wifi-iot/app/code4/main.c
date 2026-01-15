@@ -8,28 +8,25 @@
  * This is a smart conveyor belt system with the following features:
  * 
  * 1. Auto-Start Detection: Uses HX711 pressure sensor to detect items
- *    on the conveyor belt and automatically start the motor.
+ *    on the conveyor belt (presence only, no weight calculation)
+ *    and automatically start the motor.
  *    Can also be controlled via APP (MQTT).
  * 
  * 2. Anti-Jam Function: Uses infrared sensor to detect item pile-up.
  *    When jam is detected, servo motor vibrates the belt to clear it.
  *    Can also be triggered manually via APP.
  * 
- * 3. Overweight Protection: Monitors weight via HX711 sensor.
- *    When items exceed 8kg, continuous buzzer alarm sounds.
- *    Alert is pushed to APP via MQTT.
- * 
- * 4. Overheat Protection: Uses DHT11 temperature sensor to monitor
+ * 3. Overheat Protection: Uses DHT11 temperature sensor to monitor
  *    bearing temperature. When temp exceeds 30°C, stops conveyor
  *    and triggers intermittent buzzer. Alert pushed to APP.
  * 
- * 5. Speed Measurement: Hall effect sensor measures rotation speed.
+ * 4. Speed Measurement: Hall effect sensor measures rotation speed.
  *    Magnet on shaft triggers sensor for RPM calculation.
  * 
- * 6. Status Display: OLED screen shows weight, jam/overweight status,
+ * 5. Status Display: OLED screen shows item presence, jam status,
  *    conveyor state, temperature, speed, and run time.
  * 
- * 7. Remote Control: WiFi + MQTT enables APP control and monitoring.
+ * 6. Remote Control: WiFi + MQTT enables APP control and monitoring.
  *    User can start/stop conveyor, mute buzzer, and view real-time data.
  * 
  * Hardware Connections:
@@ -72,13 +69,27 @@
 #include "hall_sensor.h"
 #include "oled_display.h"
 #include "conveyor_belt.h"
+#include "buzzer_control.h"
 #include "mqtt_util.h"
 
 #define MAIN_TASK_STACK_SIZE    4096
 
+/* Early initialization to ensure buzzer is OFF on power-up */
+static void EarlyBuzzerOff(void)
+{
+    /* Initialize GPIO1 as output and set HIGH to turn off active-low buzzer */
+    GpioInit();
+    IoSetFunc(WIFI_IOT_IO_NAME_GPIO_1, WIFI_IOT_IO_FUNC_GPIO_1_GPIO);
+    GpioSetDir(WIFI_IOT_GPIO_IDX_1, WIFI_IOT_GPIO_DIR_OUT);
+    GpioSetOutputVal(WIFI_IOT_GPIO_IDX_1, 1);  /* HIGH = OFF */
+}
+
 static void ConveyorSystem_Init(void *arg)
 {
     (void)arg;
+    
+    /* Turn off buzzer immediately */
+    EarlyBuzzerOff();
     
     printf("\n");
     printf("============================================\n");
@@ -90,7 +101,7 @@ static void ConveyorSystem_Init(void *arg)
     I2C_CommonInit();
     
     /* Start sensor tasks */
-    HX711_MainLoop();       /* Pressure sensor for weight */
+    HX711_MainLoop();       /* Pressure sensor for item detection */
     DHT11_MainLoop();       /* Temperature sensor for overheat */
     IR_MainLoop();          /* Infrared sensor for jam detection */
     Hall_MainLoop();        /* Hall sensor for speed measurement */

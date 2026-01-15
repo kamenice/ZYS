@@ -2,6 +2,8 @@
  * Copyright (c) 2020 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * Description: Smart Conveyor Belt System - Main Control Logic Implementation
+ * 
+ * Simplified: No overweight detection (pressure sensor only detects presence)
  */
 
 #include <stdio.h>
@@ -23,7 +25,6 @@
 #define DEFAULT_MOTOR_SPEED         70      /* Default motor speed percentage */
 
 /* Alert flags to prevent repeated alerts (volatile for thread safety) */
-static volatile int g_overweightAlertSent = 0;
 static volatile int g_overheatAlertSent = 0;
 static volatile int g_jamAlertSent = 0;
 
@@ -87,33 +88,9 @@ static void Conveyor_HandleAutoStart(void)
     }
 }
 
-static void Conveyor_HandleOverweight(void)
-{
-    /* Feature 3: Overweight detection and alarm */
-    if (HX711_IsOverweight()) {
-        /* Continuous buzzer alarm for overweight */
-        if (!Buzzer_IsMuted()) {
-            Buzzer_On();
-        }
-        
-        /* Send alert via MQTT (only once per event) */
-        if (!g_overweightAlertSent) {
-            mqtt_publish_alert("OVERWEIGHT");
-            g_overweightAlertSent = 1;
-            printf("[Conveyor] ALERT: Overweight detected!\n");
-        }
-    } else {
-        /* Clear overweight state */
-        if (g_overweightAlertSent) {
-            Buzzer_Off();
-            g_overweightAlertSent = 0;
-        }
-    }
-}
-
 static void Conveyor_HandleOverheat(void)
 {
-    /* Feature 4: Overheat protection */
+    /* Feature: Overheat protection */
     if (DHT11_IsOverheating()) {
         /* Stop conveyor belt to prevent damage */
         if (g_isRunning) {
@@ -177,9 +154,6 @@ static void Conveyor_Task(void *arg)
     while (1) {
         /* Check and handle auto-start */
         Conveyor_HandleAutoStart();
-        
-        /* Check and handle overweight */
-        Conveyor_HandleOverweight();
         
         /* Check and handle overheat */
         Conveyor_HandleOverheat();
