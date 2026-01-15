@@ -16,6 +16,7 @@
 #include "hx711.h"
 
 #define HX711_TASK_STACK_SIZE 2048
+#define HX711_CALIBRATION_SAMPLES 10  // 校准采样次数
 
 static volatile int32_t g_hx711_value = 0;
 static volatile int g_has_object = 0;
@@ -103,11 +104,11 @@ static void HX711_Task(void *arg)
     
     // 校准：读取初始基线值
     usleep(500000);
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < HX711_CALIBRATION_SAMPLES; i++) {
         baseline += HX711_ReadRaw();
         usleep(100000);
     }
-    baseline /= 10;
+    baseline /= HX711_CALIBRATION_SAMPLES;
     calibrated = 1;
     printf("[HX711] Calibration done, baseline: %d\n", (int)baseline);
     

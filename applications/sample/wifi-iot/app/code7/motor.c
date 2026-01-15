@@ -18,6 +18,10 @@
 
 #include "motor.h"
 
+// PWM参数：160MHz时钟，4kHz频率，50%占空比
+#define MOTOR_PWM_FREQ_DIV  40000  // 160MHz / 40000 = 4kHz
+#define MOTOR_PWM_DUTY      20000  // 20000 / 40000 = 50%占空比
+
 static volatile int g_motor_state = MOTOR_STATE_STOPPED;
 
 void Motor_Init(void)
@@ -56,9 +60,8 @@ void Motor_Start(void)
     GpioSetOutputVal(MOTOR_AIN1_GPIO, WIFI_IOT_GPIO_VALUE1);
     GpioSetOutputVal(MOTOR_AIN2_GPIO, WIFI_IOT_GPIO_VALUE1);
     
-    // PWMA输出PWM信号（50%占空比）
-    // 频率分频系数：160MHz / 40000 = 4kHz
-    PwmStart(WIFI_IOT_PWM_PORT_PWM3, 20000, 40000);
+    // PWMA输出PWM信号
+    PwmStart(WIFI_IOT_PWM_PORT_PWM3, MOTOR_PWM_DUTY, MOTOR_PWM_FREQ_DIV);
     
     g_motor_state = MOTOR_STATE_RUNNING;
     printf("[Motor] Started\n");

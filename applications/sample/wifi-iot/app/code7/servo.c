@@ -28,6 +28,12 @@
 
 #include "servo.h"
 
+// 舵机控制参数
+#define SERVO_PWM_PERIOD_US    20000  // 20ms周期
+#define SERVO_PWM_MIN_HIGH_US  500    // 0度对应0.5ms
+#define SERVO_PWM_MAX_HIGH_US  2500   // 180度对应2.5ms
+#define SERVO_POSITION_PULSES  25     // 到达位置所需脉冲数（25个脉冲≈500ms）
+
 static volatile int g_servo_angle = 0;
 static volatile int g_servo_running = 0;
 static osThreadId_t g_servo_thread = NULL;
@@ -54,8 +60,8 @@ static void Servo_GeneratePulse(int angle)
     
     // 计算高电平时间（微秒）
     // 0度 = 500us, 180度 = 2500us
-    int high_time_us = 500 + (angle * 2000 / 180);
-    int low_time_us = 20000 - high_time_us; // 20ms周期
+    int high_time_us = SERVO_PWM_MIN_HIGH_US + (angle * (SERVO_PWM_MAX_HIGH_US - SERVO_PWM_MIN_HIGH_US) / 180);
+    int low_time_us = SERVO_PWM_PERIOD_US - high_time_us;
     
     // 输出PWM脉冲
     GpioSetOutputVal(SERVO_GPIO, WIFI_IOT_GPIO_VALUE1);
@@ -71,8 +77,8 @@ void Servo_SetAngle(int angle)
     
     g_servo_angle = angle;
     
-    // 生成若干个脉冲使舵机转到指定角度
-    for (int i = 0; i < 25; i++) { // 约500ms
+    // 生成脉冲使舵机转到指定角度
+    for (int i = 0; i < SERVO_POSITION_PULSES; i++) {
         Servo_GeneratePulse(angle);
     }
     
