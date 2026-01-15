@@ -11,14 +11,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("//build/lite/config/component/lite_component.gni")
+static_library("conveyor_belt") {
+    sources = [
+        "main.c",
+        "conveyor_system.c",
+        "oled_display.c",
+        "wifi_mqtt.c",
+    ]
 
-lite_component("app") {
-    features = [
-        #"code_v2.0/mq_2:mq2",
-        #"code_v2.0/aht20:chapter_05",
-        #"code_v2.0/OLED:chapter_06",
-        #"code_v2.0/ems_mqtt:ems",
-        "code8:conveyor_belt",
+    include_dirs = [
+        "//utils/native/lite/include",
+        "//kernel/liteos_m/components/cmsis/2.0",
+        "//base/iot_hardware/interfaces/kits/wifiiot_lite",
+        "//vendor/hisi/hi3861/hi3861/third_party/lwip_sack/include",
+        "//foundation/communication/interfaces/kits/wifi_lite/wifiservice",
+        "//third_party/pahomqtt/MQTTPacket/src",
+        "//third_party/pahomqtt/MQTTPacket/samples",
     ]
 }
