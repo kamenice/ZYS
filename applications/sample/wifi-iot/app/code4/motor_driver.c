@@ -31,9 +31,9 @@
 /* PWM frequency divisor for motor control */
 #define MOTOR_PWM_FREQ_DIV  40000
 
-/* Global variables */
-static int g_isRunning = 0;
-static uint8_t g_currentSpeed = 50;
+/* Global variables (volatile for thread safety) */
+static volatile int g_isRunning = 0;
+static volatile uint8_t g_currentSpeed = 50;
 
 void Motor_Init(void)
 {

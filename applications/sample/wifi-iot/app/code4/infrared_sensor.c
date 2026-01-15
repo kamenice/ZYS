@@ -20,8 +20,8 @@
 
 #define IR_TASK_STACK_SIZE  2048
 
-/* Global variable for jam state */
-static int g_jamDetected = 0;
+/* Global variable for jam state (volatile for thread safety) */
+static volatile int g_jamDetected = 0;
 
 void IR_Init(void)
 {

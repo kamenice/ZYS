@@ -18,9 +18,9 @@
 #define BUZZER_PIN      WIFI_IOT_IO_NAME_GPIO_1
 #define BUZZER_IDX      WIFI_IOT_GPIO_IDX_1
 
-/* Global variables */
-static int g_isMuted = 0;
-static int g_isIntermittent = 0;
+/* Global variables (volatile for thread safety) */
+static volatile int g_isMuted = 0;
+static volatile int g_isIntermittent = 0;
 static osThreadId_t g_intermittentTaskId = NULL;
 
 void Buzzer_Init(void)

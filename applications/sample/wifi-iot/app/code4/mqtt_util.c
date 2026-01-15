@@ -37,7 +37,8 @@
 #define MQTT_TOPIC_ALERT    "conveyor/alert"
 #define MQTT_TOPIC_CONTROL  "conveyor/control"
 
-static int g_mqttSocket = -1;
+/* Global variable for MQTT socket (volatile for thread safety) */
+static volatile int g_mqttSocket = -1;
 
 int mqtt_connect(void)
 {

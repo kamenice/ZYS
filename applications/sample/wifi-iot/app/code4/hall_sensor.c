@@ -24,9 +24,9 @@
 /* Assume 1 magnet per revolution */
 #define MAGNETS_PER_REVOLUTION  1
 
-/* Global variables */
+/* Global variables (volatile for thread safety) */
 static volatile uint32_t g_pulseCount = 0;
-static uint32_t g_rpm = 0;
+static volatile uint32_t g_rpm = 0;
 
 /* GPIO interrupt callback for Hall sensor */
 static void Hall_InterruptHandler(char *arg)

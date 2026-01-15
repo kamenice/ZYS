@@ -26,9 +26,9 @@
 
 #define HX711_TASK_STACK_SIZE       4096
 
-/* Global variables */
-static double g_baseValue = 0.0;
-static float g_currentWeight = 0.0f;
+/* Global variables (volatile for thread safety) */
+static volatile double g_baseValue = 0.0;
+static volatile float g_currentWeight = 0.0f;
 
 void HX711_Init(void)
 {

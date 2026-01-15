@@ -21,9 +21,9 @@
 
 #define DHT11_TASK_STACK_SIZE   4096
 
-/* Global variables */
-static float g_temperature = 0.0f;
-static float g_humidity = 0.0f;
+/* Global variables (volatile for thread safety) */
+static volatile float g_temperature = 0.0f;
+static volatile float g_humidity = 0.0f;
 
 /* Set GPIO as output */
 static void DHT11_SetOutput(void)

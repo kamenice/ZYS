@@ -22,18 +22,18 @@
 #define CONVEYOR_TASK_STACK_SIZE    4096
 #define DEFAULT_MOTOR_SPEED         70      /* Default motor speed percentage */
 
-/* Alert flags to prevent repeated alerts */
-static int g_overweightAlertSent = 0;
-static int g_overheatAlertSent = 0;
-static int g_jamAlertSent = 0;
+/* Alert flags to prevent repeated alerts (volatile for thread safety) */
+static volatile int g_overweightAlertSent = 0;
+static volatile int g_overheatAlertSent = 0;
+static volatile int g_jamAlertSent = 0;
 
-/* Run time tracking */
-static uint32_t g_runTime = 0;
-static int g_isRunning = 0;
+/* Run time tracking (volatile for thread safety) */
+static volatile uint32_t g_runTime = 0;
+static volatile int g_isRunning = 0;
 
-/* Control flags */
-static int g_autoStartEnabled = 1;
-static int g_manualVibrate = 0;
+/* Control flags (volatile for thread safety) */
+static volatile int g_autoStartEnabled = 1;
+static volatile int g_manualVibrate = 0;
 
 void Conveyor_Init(void)
 {

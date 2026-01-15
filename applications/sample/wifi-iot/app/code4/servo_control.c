@@ -27,8 +27,8 @@
 /* PWM period divisor */
 #define SERVO_PERIOD_DIVISOR    (PWM_CLK_FREQ / SERVO_FREQ)
 
-/* Global variable */
-static int g_isVibrating = 0;
+/* Global variable (volatile for thread safety) */
+static volatile int g_isVibrating = 0;
 
 /* Convert angle to PWM duty cycle
  * 0 degrees = 0.5ms = 2.5% duty
