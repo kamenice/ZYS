@@ -247,27 +247,41 @@ void OledDisplay_Task(void)
 static void MqttPublish_TaskRun(void *arg)
 {
     (void)arg;
+    int retryCount = 0;
+    const int maxRetries = 5;
     
     printf("[MqttTask] Starting...\n");
     
-    // 连接WiFi
-    WiFi_Connect();
-    
-    // 等待WiFi连接成功
-    sleep(5);
-    
-    if (!WiFi_IsConnected()) {
-        printf("[MqttTask] WiFi not connected, task exiting\n");
-        return;
+    // 连接WiFi (带重试)
+    while (!WiFi_IsConnected() && retryCount < maxRetries) {
+        printf("[MqttTask] Connecting to WiFi, attempt %d/%d\n", retryCount + 1, maxRetries);
+        WiFi_Connect();
+        sleep(5);
+        retryCount++;
     }
     
-    // 连接MQTT服务器
-    if (MQTT_Connect() != 0) {
-        printf("[MqttTask] MQTT connection failed, task exiting\n");
-        return;
+    if (!WiFi_IsConnected()) {
+        printf("[MqttTask] WiFi connection failed after %d attempts\n", maxRetries);
+        // 继续运行，稍后重试
+    }
+    
+    // 连接MQTT服务器 (带重试)
+    retryCount = 0;
+    while (MQTT_Connect() != 0 && retryCount < maxRetries) {
+        printf("[MqttTask] MQTT connection failed, retry %d/%d\n", retryCount + 1, maxRetries);
+        sleep(5);
+        retryCount++;
     }
     
     while (1) {
+        // 检查WiFi连接
+        if (!WiFi_IsConnected()) {
+            printf("[MqttTask] WiFi disconnected, reconnecting...\n");
+            WiFi_Connect();
+            sleep(5);
+            continue;
+        }
+        
         // 发布数据
         MQTT_PublishData(g_hasObject, g_temperature, g_motorRunning, g_infraredDetected);
         

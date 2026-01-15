@@ -84,7 +84,9 @@ unsigned long HX711_Read(void)
     // 第25个脉冲，设置增益为128
     GpioSetOutputVal(HX711_SCK_GPIO, WIFI_IOT_GPIO_VALUE1);
     usleep(2);
-    value = value ^ 0x800000;  // 转换为有符号数
+    // XOR 0x800000: HX711输出为24位补码，MSB为符号位
+    // 此操作将补码转换为偏移二进制表示，便于后续计算
+    value = value ^ 0x800000;
     GpioSetOutputVal(HX711_SCK_GPIO, WIFI_IOT_GPIO_VALUE0);
     usleep(2);
     

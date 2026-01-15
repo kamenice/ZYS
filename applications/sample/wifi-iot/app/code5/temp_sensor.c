@@ -96,8 +96,8 @@ static uint32_t AHT20_ResetCommand(void)
 
 static uint32_t AHT20_CalibrateCommand(void)
 {
-    uint8_t clibrateCmd[] = {AHT20_CMD_CALIBRATION, AHT20_CMD_CALIBRATION_ARG0, AHT20_CMD_CALIBRATION_ARG1};
-    return AHT20_Write(clibrateCmd, sizeof(clibrateCmd));
+    uint8_t calibrateCmd[] = {AHT20_CMD_CALIBRATION, AHT20_CMD_CALIBRATION_ARG0, AHT20_CMD_CALIBRATION_ARG1};
+    return AHT20_Write(calibrateCmd, sizeof(calibrateCmd));
 }
 
 static uint32_t AHT20_Calibrate(void)

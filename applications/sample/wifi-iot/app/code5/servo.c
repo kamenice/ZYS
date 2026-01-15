@@ -10,16 +10,18 @@
  * - 90度:  1.5ms 高电平
  * - 180度: 2.5ms 高电平
  * 
- * Hi3861 PWM时钟为160MHz
- * 20ms周期 = 50Hz
- * 分频值 = 160MHz / 50Hz = 3200000 (超出uint16范围)
- * 使用预分频: 160MHz / 4000 = 40000Hz
- * 周期 = 40000 / 50 = 800 (即freq参数为800)
+ * Hi3861 PWM说明:
+ * PwmStart(port, duty, freq) 参数说明:
+ * - freq: 频率分频值，PWM周期 = freq个时钟周期
+ * - duty: 占空比，高电平时间 = duty个时钟周期
  * 
- * 高电平时间:
- * - 0.5ms = 2.5% 占空比 = 20
- * - 1.5ms = 7.5% 占空比 = 60
- * - 2.5ms = 12.5% 占空比 = 100
+ * 使用较大的freq值来实现20ms周期:
+ * freq = 60000 时，周期约为20ms（基于160MHz/4000预分频后的40kHz）
+ * 
+ * 占空比计算 (基于20ms周期):
+ * - 0.5ms 高电平: duty = 60000 * 0.5 / 20 = 1500
+ * - 1.5ms 高电平: duty = 60000 * 1.5 / 20 = 4500
+ * - 2.5ms 高电平: duty = 60000 * 2.5 / 20 = 7500
  */
 
 #include <stdio.h>
@@ -33,18 +35,16 @@
 #define SERVO_PWM_PORT   WIFI_IOT_PWM_PORT_PWM3
 #define SERVO_GPIO       WIFI_IOT_IO_NAME_GPIO_6
 
-// PWM参数 (基于160MHz时钟)
-// 160MHz / 40000 = 4000Hz时钟
-// 4000Hz / 80 = 50Hz (20ms周期)
-#define SERVO_PWM_FREQ   80  // 产生约20ms周期
+// PWM参数 - 用于产生约20ms周期的PWM信号
+#define SERVO_PWM_FREQ   60000  // 频率分频值，产生约20ms周期
 
-// 占空比对应的脉宽
-// 0度: 0.5ms / 20ms = 2.5% -> 80 * 2.5% = 2
-// 90度: 1.5ms / 20ms = 7.5% -> 80 * 7.5% = 6
-// 180度: 2.5ms / 20ms = 12.5% -> 80 * 12.5% = 10
-#define SERVO_DUTY_0DEG    2   // 0度对应的占空比
-#define SERVO_DUTY_90DEG   6   // 90度对应的占空比
-#define SERVO_DUTY_180DEG  10  // 180度对应的占空比
+// 占空比对应的脉宽 (基于60000的周期)
+// 0度: 0.5ms / 20ms * 60000 = 1500
+// 90度: 1.5ms / 20ms * 60000 = 4500
+// 180度: 2.5ms / 20ms * 60000 = 7500
+#define SERVO_DUTY_0DEG    1500   // 0度对应的占空比 (0.5ms)
+#define SERVO_DUTY_90DEG   4500   // 90度对应的占空比 (1.5ms)
+#define SERVO_DUTY_180DEG  7500   // 180度对应的占空比 (2.5ms)
 
 /**
  * @brief 初始化舵机
