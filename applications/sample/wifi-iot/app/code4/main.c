@@ -80,8 +80,11 @@ static void EarlyBuzzerOff(void)
     /* Initialize GPIO1 as output and set HIGH to turn off active-low buzzer */
     GpioInit();
     IoSetFunc(WIFI_IOT_IO_NAME_GPIO_1, WIFI_IOT_IO_FUNC_GPIO_1_GPIO);
+    /* Set pull-up resistor first to ensure HIGH */
+    IoSetPull(WIFI_IOT_IO_NAME_GPIO_1, WIFI_IOT_IO_PULL_UP);
     GpioSetDir(WIFI_IOT_GPIO_IDX_1, WIFI_IOT_GPIO_DIR_OUT);
-    GpioSetOutputVal(WIFI_IOT_GPIO_IDX_1, 1);  /* HIGH = OFF */
+    GpioSetOutputVal(WIFI_IOT_GPIO_IDX_1, WIFI_IOT_GPIO_VALUE1);  /* HIGH = OFF */
+    printf("[Early] Buzzer OFF\n");
 }
 
 static void ConveyorSystem_Init(void *arg)

@@ -28,19 +28,18 @@ void Buzzer_Init(void)
 {
     GpioInit();
     
-    /* CRITICAL: Set GPIO as output and HIGH FIRST to turn off buzzer */
-    /* This prevents buzzer from sounding during initialization */
+    /* CRITICAL: Configure GPIO1 for buzzer control */
+    /* Active buzzer: LOW = ON, HIGH = OFF */
     IoSetFunc(BUZZER_PIN, WIFI_IOT_IO_FUNC_GPIO_1_GPIO);
+    
+    /* Set pull-up resistor to ensure HIGH when idle */
+    IoSetPull(BUZZER_PIN, WIFI_IOT_IO_PULL_UP);
+    
+    /* Set as output */
     GpioSetDir(BUZZER_IDX, WIFI_IOT_GPIO_DIR_OUT);
     
-    /* Turn off buzzer immediately (HIGH = OFF for active low buzzer) */
-    GpioSetOutputVal(BUZZER_IDX, 1);
-    
-    /* Small delay to ensure GPIO state is stable */
-    usleep(1000);
-    
-    /* Ensure buzzer is OFF again after delay */
-    GpioSetOutputVal(BUZZER_IDX, 1);
+    /* Turn off buzzer (HIGH = OFF for active low buzzer) */
+    GpioSetOutputVal(BUZZER_IDX, WIFI_IOT_GPIO_VALUE1);
     
     printf("[Buzzer] Buzzer initialized (OFF)\n");
 }

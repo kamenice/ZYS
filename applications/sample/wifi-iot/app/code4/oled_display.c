@@ -84,6 +84,9 @@ static void Display_Task(void *arg)
 {
     (void)arg;
     
+    /* Wait for I2C to be initialized first */
+    sleep(2);
+    
     Display_Init();
     sleep(1);
     
