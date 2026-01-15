@@ -25,7 +25,10 @@
 #define DHT11_GPIO      WIFI_IOT_GPIO_IDX_7
 #define DHT11_IO_NAME   WIFI_IOT_IO_NAME_GPIO_7
 
-/* Temperature threshold for alarm */
+/* Temperature threshold for alarm (degrees Celsius)
+ * When temperature exceeds this value, buzzer will sound and motor will stop
+ * This value can be adjusted based on application requirements
+ */
 #define TEMPERATURE_THRESHOLD 30.0f
 
 static float g_temperature = 0.0f;

@@ -90,7 +90,11 @@ unsigned long HX711_Read(void)
         }
     }
 
-    /* 25th pulse for gain selection (128 gain) */
+    /* 25th pulse for gain selection (128 gain)
+     * XOR with 0x800000 converts the 24-bit two's complement value
+     * from offset binary format to standard signed integer format
+     * (flips the MSB to handle negative values correctly)
+     */
     GpioSetOutputVal(HX711_SCK_GPIO, WIFI_IOT_GPIO_VALUE1);
     usleep(2);
     value = value ^ 0x800000;

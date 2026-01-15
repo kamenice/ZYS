@@ -31,17 +31,21 @@
  *   - 1.5ms -> 90 degrees
  *   - 2.5ms -> 180 degrees
  *
- * PWM calculation with 160MHz clock:
- * - For 50Hz (20ms period): freq_divisor = 160MHz / 50Hz = 3,200,000
- * - But PWM duty/freq are 16-bit (max 65535), so we need to use prescaler
- * - With default settings: freq represents clock cycles per PWM period
- * - duty / freq = duty cycle ratio
+ * PWM Configuration Explanation:
+ * The Hi3861 PWM uses freq as a divisor value, not actual frequency.
+ * With 160MHz system clock and default prescaler:
+ * - freq = 64000 gives approximately 2.5kHz carrier (160MHz / 64000)
+ * - The duty cycle ratio (duty/freq) determines the pulse width
+ * - For 20ms period servo signal, we rely on the internal timing
  *
- * Simplified approach:
- * - freq = 64000 (gives us enough resolution)
- * - For 0.5ms: duty = 64000 * 0.5 / 20 = 1600
- * - For 1.5ms: duty = 64000 * 1.5 / 20 = 4800
- * - For 2.5ms: duty = 64000 * 2.5 / 20 = 8000
+ * Duty cycle calculation for servo position:
+ * - duty / freq = high_pulse_time / period
+ * - For 0.5ms (0°):   duty = 64000 * 0.5 / 20 = 1600 (2.5% duty)
+ * - For 1.5ms (90°):  duty = 64000 * 1.5 / 20 = 4800 (7.5% duty)
+ * - For 2.5ms (180°): duty = 64000 * 2.5 / 20 = 8000 (12.5% duty)
+ *
+ * Note: The actual PWM frequency may differ from standard 50Hz,
+ * but the duty cycle ratio maintains correct pulse widths for servo control.
  */
 #define SERVO_GPIO      WIFI_IOT_GPIO_IDX_9
 #define SERVO_PWM_PORT  WIFI_IOT_PWM_PORT_PWM0

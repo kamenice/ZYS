@@ -160,8 +160,15 @@ static void MqttTask(void *arg)
 
     printf("[MqttTask] Starting MQTT task\n");
 
-    /* Wait for WiFi connection */
-    sleep(10);
+    /* Wait for WiFi connection to complete
+     * WiFi connection typically takes 5-8 seconds (including DHCP)
+     * We wait 10 seconds to ensure stable connection before MQTT
+     */
+    while (!WiFi_IsConnected()) {
+        printf("[MqttTask] Waiting for WiFi connection...\n");
+        sleep(2);
+    }
+    sleep(2); /* Additional delay for connection stabilization */
 
     /* Connect to MQTT broker */
     if (MQTT_Connect() < 0) {
