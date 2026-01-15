@@ -46,9 +46,12 @@ static volatile int g_mqttSocket = -1;
 int mqtt_connect(void)
 {
     MQTTPacket_connectData data = MQTTPacket_connectData_initializer;
+    MQTTString topicFilter = MQTTString_initializer;
     unsigned char buf[200];
     int buflen = sizeof(buf);
     int len = 0;
+    int req_qos = 0;
+    int msgid = 1;
 
     /* Configure connection parameters */
     data.clientID.cstring = MQTT_CLIENT_ID;
@@ -91,10 +94,7 @@ int mqtt_connect(void)
     }
 
     /* Subscribe to control topic */
-    MQTTString topicFilter = MQTTString_initializer;
     topicFilter.cstring = MQTT_TOPIC_CONTROL;
-    int req_qos = 0;
-    int msgid = 1;
     
     len = MQTTSerialize_subscribe(buf, buflen, 0, msgid, 1, &topicFilter, &req_qos);
     transport_sendPacketBuffer(g_mqttSocket, buf, len);
@@ -106,26 +106,36 @@ int mqtt_connect(void)
 
 void mqtt_publish_status(void)
 {
-    if (g_mqttSocket < 0) return;
-
+    MQTTString topicString = MQTTString_initializer;
     unsigned char buf[256];
     int buflen = sizeof(buf);
     char payload[200];
     int len = 0;
+    int payloadlen = 0;
+    float weight = 0;
+    float temp = 0;
+    float humidity = 0;
+    int jam = 0;
+    unsigned int rpm = 0;
+    int running = 0;
+    unsigned int runTime = 0;
+    int overweight = 0;
+    int overheat = 0;
 
-    MQTTString topicString = MQTTString_initializer;
+    if (g_mqttSocket < 0) return;
+
     topicString.cstring = MQTT_TOPIC_STATUS;
 
     /* Get sensor data */
-    float weight = HX711_GetWeight();
-    float temp = DHT11_GetTemperature();
-    float humidity = DHT11_GetHumidity();
-    int jam = IR_IsJamDetected();
-    unsigned int rpm = (unsigned int)Hall_GetRPM();
-    int running = Motor_IsRunning();
-    unsigned int runTime = (unsigned int)Conveyor_GetRunTime();
-    int overweight = HX711_IsOverweight();
-    int overheat = DHT11_IsOverheating();
+    weight = HX711_GetWeight();
+    temp = DHT11_GetTemperature();
+    humidity = DHT11_GetHumidity();
+    jam = IR_IsJamDetected();
+    rpm = (unsigned int)Hall_GetRPM();
+    running = Motor_IsRunning();
+    runTime = (unsigned int)Conveyor_GetRunTime();
+    overweight = HX711_IsOverweight();
+    overheat = DHT11_IsOverheating();
 
     /* Format JSON payload */
     snprintf(payload, sizeof(payload),
@@ -135,7 +145,7 @@ void mqtt_publish_status(void)
              weight, temp, humidity, jam, rpm, running,
              runTime, overweight, overheat);
 
-    int payloadlen = strlen(payload);
+    payloadlen = strlen(payload);
     len = MQTTSerialize_publish(buf, buflen, 0, 0, 0, 0, topicString, 
                                  (unsigned char *)payload, payloadlen);
     transport_sendPacketBuffer(g_mqttSocket, buf, len);
@@ -145,20 +155,21 @@ void mqtt_publish_status(void)
 
 void mqtt_publish_alert(const char *alertType)
 {
-    if (g_mqttSocket < 0) return;
-
+    MQTTString topicString = MQTTString_initializer;
     unsigned char buf[200];
     int buflen = sizeof(buf);
     char payload[100];
     int len = 0;
+    int payloadlen = 0;
 
-    MQTTString topicString = MQTTString_initializer;
+    if (g_mqttSocket < 0) return;
+
     topicString.cstring = MQTT_TOPIC_ALERT;
 
     /* Format alert message */
     snprintf(payload, sizeof(payload), "{\"alert\":\"%s\"}", alertType);
 
-    int payloadlen = strlen(payload);
+    payloadlen = strlen(payload);
     len = MQTTSerialize_publish(buf, buflen, 0, 0, 0, 0, topicString,
                                  (unsigned char *)payload, payloadlen);
     transport_sendPacketBuffer(g_mqttSocket, buf, len);
@@ -185,21 +196,24 @@ static void mqtt_process_command(const char *cmd)
 
 static void mqtt_receive_loop(void)
 {
-    if (g_mqttSocket < 0) return;
-
     unsigned char buf[200];
     int buflen = sizeof(buf);
+    int rc = 0;
+    unsigned char dup = 0;
+    unsigned char retained = 0;
+    unsigned char *payload_in = NULL;
+    unsigned short packetid = 0;
+    int qos = 0;
+    int payloadlen_in = 0;
+    MQTTString receivedTopic = MQTTString_initializer;
+    char cmd[100] = {0};
+
+    if (g_mqttSocket < 0) return;
 
     /* Check for incoming messages (non-blocking) */
-    int rc = MQTTPacket_read(buf, buflen, transport_getdata);
+    rc = MQTTPacket_read(buf, buflen, transport_getdata);
     
     if (rc == PUBLISH) {
-        unsigned char dup, retained;
-        unsigned char *payload_in;
-        unsigned short packetid;
-        int qos, payloadlen_in;
-        MQTTString receivedTopic = MQTTString_initializer;
-
         MQTTDeserialize_publish(&dup, &qos, &retained, &packetid, &receivedTopic,
                                 &payload_in, &payloadlen_in, buf, buflen);
 
@@ -211,7 +225,6 @@ static void mqtt_receive_loop(void)
         (void)receivedTopic;
 
         /* Process received command */
-        char cmd[100] = {0};
         if (payloadlen_in < (int)sizeof(cmd) - 1) {
             memcpy(cmd, payload_in, payloadlen_in);
             mqtt_process_command(cmd);
