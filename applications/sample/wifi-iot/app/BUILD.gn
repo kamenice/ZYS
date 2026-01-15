@@ -15,9 +15,10 @@ import("//build/lite/config/component/lite_component.gni")
 
 lite_component("app") {
     features = [
-        "code_v2.0/mq_2:mq2",
+        #"code_v2.0/mq_2:mq2",
        #"code_v2.0/aht20:chapter_05",
        #"code_v2.0/OLED:chapter_06",
        #"code_v2.0/ems_mqtt:ems",
+       "code6:conveyor_belt",
     ]
 }
