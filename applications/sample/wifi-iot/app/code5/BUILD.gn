@@ -1,0 +1,32 @@
+# 智能传送带系统 BUILD.gn
+# Smart Conveyor Belt System
+
+static_library("conveyor") {
+    
+    # 源文件列表
+    sources = [
+        "main.c",
+        "conveyor_task.c",
+        "hx711.c",
+        "tb6612.c",
+        "temp_sensor.c",
+        "buzzer.c",
+        "infrared.c",
+        "servo.c",
+        "oled_ssd1306.c",
+        "oled_display.c",
+        "wifi_connect.c",
+        "mqtt_client.c",
+    ]
+
+    # 头文件路径
+    include_dirs = [
+        "//utils/native/lite/include",
+        "//kernel/liteos_m/components/cmsis/2.0",
+        "//base/iot_hardware/interfaces/kits/wifiiot_lite",
+        "//vendor/hisi/hi3861/hi3861/third_party/lwip_sack/include",
+        "//foundation/communication/interfaces/kits/wifi_lite/wifiservice",
+        "//third_party/pahomqtt/MQTTPacket/src",
+        "//third_party/pahomqtt/MQTTPacket/samples",
+    ]
+}
