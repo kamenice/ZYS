@@ -98,10 +98,10 @@ void Buzzer_StopIntermittent(void)
     g_isIntermittent = 0;
     Buzzer_Off();
     
-    if (g_intermittentTaskId != NULL) {
-        osThreadTerminate(g_intermittentTaskId);
-        g_intermittentTaskId = NULL;
-    }
+    /* Thread will exit gracefully on next loop iteration */
+    /* Wait briefly for thread to exit */
+    usleep(200000);
+    g_intermittentTaskId = NULL;
     printf("[Buzzer] Intermittent beeping stopped\n");
 }
 

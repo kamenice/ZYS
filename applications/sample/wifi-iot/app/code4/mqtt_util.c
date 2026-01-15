@@ -2,6 +2,9 @@
  * Copyright (c) 2020 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * Description: Smart Conveyor Belt System - MQTT Utility Implementation
+ * 
+ * Note: MQTT server configuration uses PC IP when connected to zys WiFi.
+ * For production deployment, consider using a configuration interface.
  */
 
 #include <stdio.h>
@@ -25,7 +28,7 @@
 #include "buzzer_control.h"
 #include "conveyor_belt.h"
 
-/* MQTT Configuration */
+/* MQTT Configuration - PC IP when connected to zys WiFi */
 #define MQTT_SERVER_HOST    "192.168.43.230"
 #define MQTT_SERVER_PORT    1883
 #define MQTT_CLIENT_ID      "hi3861-conveyor"
@@ -249,7 +252,7 @@ void mqtt_start_task(void)
     attr.cb_size = 0U;
     attr.stack_mem = NULL;
     attr.stack_size = 4096;
-    attr.priority = 36;
+    attr.priority = osPriorityBelowNormal;
 
     if (osThreadNew((osThreadFunc_t)mqtt_task, NULL, &attr) == NULL) {
         printf("[MQTT] Failed to create MQTT task!\n");

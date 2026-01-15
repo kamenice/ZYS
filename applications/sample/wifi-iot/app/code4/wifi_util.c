@@ -2,6 +2,9 @@
  * Copyright (c) 2020 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * Description: Smart Conveyor Belt System - WiFi Utility Implementation
+ * 
+ * Note: WiFi credentials are configured as per project requirements.
+ * For production deployment, consider using a configuration interface.
  */
 
 #include <stdio.h>
@@ -12,7 +15,7 @@
 #include "lwip/netifapi.h"
 #include "lwip/api_shell.h"
 
-/* WiFi Configuration */
+/* WiFi Configuration - as specified in project requirements */
 #define WIFI_SSID       "zys"
 #define WIFI_PASSWORD   "12345678"
 
