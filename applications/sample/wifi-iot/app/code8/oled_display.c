@@ -37,6 +37,9 @@
 
 static osMutexId_t g_i2cMutex = NULL;
 
+/* Font size constant */
+#define F6X8_FONT_SIZE (sizeof(F6x8) / sizeof(F6x8[0]))
+
 /* 6x8 font data for basic ASCII characters */
 static const unsigned char F6x8[][6] = {
     {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, /* space */
@@ -183,7 +186,7 @@ static void OledShowChar(uint8_t x, uint8_t y, uint8_t ch)
 {
     uint8_t c, i;
     c = ch - ' ';
-    if (c >= sizeof(F6x8) / sizeof(F6x8[0])) {
+    if (c >= F6X8_FONT_SIZE) {
         return;
     }
     if (x > OLED_WIDTH - 1) {

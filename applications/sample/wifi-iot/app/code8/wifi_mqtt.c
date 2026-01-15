@@ -169,10 +169,11 @@ static void MqttTask(void *arg)
         
         if (g_wifiConnected) {
             MqttPublishLoop();
+            /* MqttPublishLoop only returns on error, so mark disconnected */
+            g_wifiConnected = 0;
         }
         
-        /* If disconnected, wait and retry */
-        g_wifiConnected = 0;
+        /* Wait before retry on failure */
         sleep(5);
     }
 }

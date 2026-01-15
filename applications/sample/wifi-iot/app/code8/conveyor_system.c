@@ -68,6 +68,22 @@
 
 #define TASK_STACK_SIZE 2048
 
+/* Timing constants */
+#define HX711_TIMING_DELAY_US       2
+#define HX711_DETECTION_THRESHOLD   10000
+
+/* Motor PWM constants */
+#define MOTOR_DUTY_CYCLE_PERCENT    80
+#define MOTOR_PWM_FREQ              50000
+#define MOTOR_PWM_DUTY              ((MOTOR_PWM_FREQ * MOTOR_DUTY_CYCLE_PERCENT) / 100)
+
+/* Servo PWM constants (160MHz clock) */
+#define SERVO_CLOCK_MHZ             160
+#define SERVO_PERIOD_MS             20
+#define SERVO_PWM_FREQ              ((SERVO_CLOCK_MHZ * 1000000) / (SERVO_PERIOD_MS * 1000))
+#define SERVO_DUTY_MIN              200     /* 0.5ms = 0 degrees */
+#define SERVO_DUTY_MAX              1000    /* 2.5ms = 180 degrees */
+
 /* Global system state */
 static ConveyorState g_state = {0};
 static osMutexId_t g_stateMutex = NULL;
@@ -86,7 +102,7 @@ static int HX711_ReadItemDetected(void)
 
     /* Set SCK low (idle state) */
     GpioSetOutputVal(HX711_SCK_PIN, WIFI_IOT_GPIO_VALUE0);
-    usleep(2);
+    usleep(HX711_TIMING_DELAY_US);
 
     /* Wait for DT to go low (conversion ready) */
     int timeout = 1000;
@@ -101,10 +117,10 @@ static int HX711_ReadItemDetected(void)
     /* Read 24-bit data */
     for (i = 0; i < 24; i++) {
         GpioSetOutputVal(HX711_SCK_PIN, WIFI_IOT_GPIO_VALUE1);
-        usleep(2);
+        usleep(HX711_TIMING_DELAY_US);
         value = value << 1;
         GpioSetOutputVal(HX711_SCK_PIN, WIFI_IOT_GPIO_VALUE0);
-        usleep(2);
+        usleep(HX711_TIMING_DELAY_US);
         GpioGetInputVal(HX711_DT_PIN, &input);
         if (input == WIFI_IOT_GPIO_VALUE1) {
             value++;
@@ -113,10 +129,10 @@ static int HX711_ReadItemDetected(void)
 
     /* 25th pulse for gain setting (A channel, gain 128) */
     GpioSetOutputVal(HX711_SCK_PIN, WIFI_IOT_GPIO_VALUE1);
-    usleep(2);
+    usleep(HX711_TIMING_DELAY_US);
     value = value ^ 0x800000;
     GpioSetOutputVal(HX711_SCK_PIN, WIFI_IOT_GPIO_VALUE0);
-    usleep(2);
+    usleep(HX711_TIMING_DELAY_US);
 
     /* Simple threshold detection - if value exceeds baseline, item detected */
     /* Using a simple threshold approach since we just need presence detection */
@@ -133,7 +149,7 @@ static int HX711_ReadItemDetected(void)
     long diff = (long)value - (long)baseline;
     if (diff < 0) diff = -diff;
     
-    return (diff > 10000) ? 1 : 0;
+    return (diff > HX711_DETECTION_THRESHOLD) ? 1 : 0;
 }
 
 /* DHT11 read function */
@@ -144,11 +160,11 @@ static int DHT11_ReadTemperature(float *temp)
     WifiIotGpioValue level;
     int timeout;
 
-    /* Start signal: pull low for 18ms, then high for 20-40us */
+    /* Start signal: pull low for 20ms, then high for 30us */
     IoSetFunc(WIFI_IOT_IO_NAME_GPIO_5, WIFI_IOT_IO_FUNC_GPIO_5_GPIO);
     GpioSetDir(DHT11_PIN, WIFI_IOT_GPIO_DIR_OUT);
     GpioSetOutputVal(DHT11_PIN, WIFI_IOT_GPIO_VALUE0);
-    usleep(20000);  /* 20ms low */
+    osDelay(2);     /* ~20ms low (osDelay unit is typically 10ms tick) */
     GpioSetOutputVal(DHT11_PIN, WIFI_IOT_GPIO_VALUE1);
     usleep(30);     /* 30us high */
 
@@ -247,8 +263,8 @@ static void Motor_Start(void)
     /* AIN1 and AIN2 same level = forward rotation */
     GpioSetOutputVal(MOTOR_AIN1_PIN, WIFI_IOT_GPIO_VALUE1);
     GpioSetOutputVal(MOTOR_AIN2_PIN, WIFI_IOT_GPIO_VALUE1);
-    /* PWMA high - start motor (duty cycle ~80%) */
-    PwmStart(WIFI_IOT_PWM_PORT_PWM3, 40000, 50000);
+    /* PWMA - start motor with defined duty cycle */
+    PwmStart(WIFI_IOT_PWM_PORT_PWM3, MOTOR_PWM_DUTY, MOTOR_PWM_FREQ);
     g_state.motor_running = 1;
 }
 
@@ -291,24 +307,16 @@ static void Servo_Init(void)
 static void Servo_SetAngle(int angle)
 {
     /*
-     * 20ms period with 160MHz clock:
-     * freq = 160MHz / 20ms = 8000
-     * 0.5ms duty = 0.5/20 * 8000 = 200 (0 degrees)
-     * 2.5ms duty = 2.5/20 * 8000 = 1000 (180 degrees)
-     * 
-     * Using 40MHz external crystal for better timing:
-     * freq = 40MHz / 20ms = 2000
-     * 0.5ms = 50, 2.5ms = 250
+     * Servo control with 160MHz clock:
+     * - Period: 20ms -> freq divisor = 160MHz / 50Hz = 3200000 / 8000 = 8000
+     * - 0.5ms pulse (0 degrees) = 0.5/20 * 8000 = 200
+     * - 2.5ms pulse (180 degrees) = 2.5/20 * 8000 = 1000
      */
-    uint16_t freq = 8000;  /* 20ms period */
-    uint16_t duty_min = 200;   /* 0.5ms = 0 degrees */
-    uint16_t duty_max = 1000;  /* 2.5ms = 180 degrees */
-    
     if (angle < 0) angle = 0;
     if (angle > 180) angle = 180;
     
-    uint16_t duty = duty_min + (duty_max - duty_min) * angle / 180;
-    PwmStart(WIFI_IOT_PWM_PORT_PWM0, duty, freq);
+    uint16_t duty = SERVO_DUTY_MIN + (SERVO_DUTY_MAX - SERVO_DUTY_MIN) * angle / 180;
+    PwmStart(WIFI_IOT_PWM_PORT_PWM0, duty, SERVO_PWM_FREQ);
 }
 
 static void Servo_Stop(void)
@@ -415,7 +423,7 @@ static void MotorTask(void *arg)
         }
 
         printf("[Motor] Status: %s\n", g_state.motor_running ? "RUNNING" : "STOPPED");
-        usleep(500000);  /* 500ms */
+        osDelay(50);  /* ~500ms (osDelay unit is typically 10ms tick) */
     }
 }
 
@@ -441,7 +449,7 @@ static void ServoTask(void *arg)
             Servo_Stop();
         }
 
-        usleep(200000);  /* 200ms */
+        osDelay(20);  /* ~200ms (osDelay unit is typically 10ms tick) */
     }
 }
 
