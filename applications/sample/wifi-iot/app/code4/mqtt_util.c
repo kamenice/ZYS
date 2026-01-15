@@ -195,12 +195,12 @@ static void mqtt_receive_loop(void)
     
     if (rc == PUBLISH) {
         unsigned char dup, retained;
-        unsigned short msgid;
-        int payloadlen_in;
         unsigned char *payload_in;
-        MQTTString receivedTopic;
+        unsigned short packetid;
+        int qos, payloadlen_in;
+        MQTTString receivedTopic = MQTTString_initializer;
 
-        MQTTDeserialize_publish(&dup, &retained, &msgid, &receivedTopic,
+        MQTTDeserialize_publish(&dup, &qos, &retained, &packetid, &receivedTopic,
                                 &payload_in, &payloadlen_in, buf, buflen);
 
         /* Process received command */
