@@ -1,0 +1,125 @@
+/*
+ * Copyright (c) 2020 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @file main.c
+ * @brief Main entry point for the Conveyor Belt Intelligent System
+ *
+ * This system implements a smart conveyor belt controller for the Hi3861 chip with:
+ * - Auto-start via HX711 pressure sensor when items are placed on belt
+ * - Button and APP control for manual start/stop
+ * - Jam detection using YL-62 infrared sensor with SG90 servo vibration clearing
+ * - Overweight detection with buzzer alarm and MQTT notification
+ * - Overheat protection using DHT11 temperature sensor
+ * - Speed measurement using 3411 Hall effect sensor
+ * - OLED status display
+ * - WiFi/MQTT remote monitoring and control
+ */
+
+#include <stdio.h>
+#include <unistd.h>
+
+#include "ohos_init.h"
+#include "cmsis_os2.h"
+#include "wifiiot_gpio.h"
+#include "wifiiot_gpio_ex.h"
+#include "wifiiot_i2c.h"
+
+#include "conveyor_system.h"
+
+#define MAIN_TASK_STACK_SIZE    4096
+#define MAIN_TASK_PRIORITY      osPriorityNormal
+#define TASK_INTERVAL_MS        500
+
+/**
+ * @brief Main conveyor system task
+ *
+ * This task runs continuously to:
+ * - Initialize all system components
+ * - Periodically read sensors
+ * - Update display
+ * - Handle alarms
+ * - Process MQTT messages
+ */
+static void ConveyorMainTask(void *arg)
+{
+    (void)arg;
+
+    printf("\r\n==========================================\r\n");
+    printf("  Conveyor Belt Intelligent System\r\n");
+    printf("  Platform: Hi3861\r\n");
+    printf("==========================================\r\n");
+
+    /* Initialize the conveyor belt system */
+    printf("[Main] Starting initialization...\r\n");
+    ConveyorSystem_Init();
+
+    printf("[Main] System ready. Starting main loop...\r\n");
+
+    /* Main loop */
+    while (1) {
+        /* Execute main system task */
+        ConveyorSystem_Task();
+
+        /* Task interval delay */
+        sleep(1);
+    }
+}
+
+/**
+ * @brief Initialize I2C0 with mutex (for OLED and sensors)
+ * Following reference pattern from code_v2.0/ly_charter7
+ */
+static void I2C_CommonInit(void)
+{
+    /* Initialize GPIO */
+    GpioInit();
+
+    /* Initialize I2C0 pins for OLED */
+    IoSetFunc(WIFI_IOT_IO_NAME_GPIO_13, WIFI_IOT_IO_FUNC_GPIO_13_I2C0_SDA);
+    IoSetFunc(WIFI_IOT_IO_NAME_GPIO_14, WIFI_IOT_IO_FUNC_GPIO_14_I2C0_SCL);
+    I2cInit(WIFI_IOT_I2C_IDX_0, 400000); /* 400kHz */
+}
+
+/**
+ * @brief Application entry point
+ *
+ * Creates the main conveyor system task thread
+ */
+static void ConveyorApp(void)
+{
+    osThreadAttr_t attr;
+
+    printf("\r\n[ConveyorApp] Application starting...\r\n");
+
+    /* Initialize I2C0 BEFORE creating thread (following reference pattern) */
+    I2C_CommonInit();
+
+    attr.name = "ConveyorMainTask";
+    attr.attr_bits = 0U;
+    attr.cb_mem = NULL;
+    attr.cb_size = 0U;
+    attr.stack_mem = NULL;
+    attr.stack_size = MAIN_TASK_STACK_SIZE;
+    attr.priority = MAIN_TASK_PRIORITY;
+
+    if (osThreadNew((osThreadFunc_t)ConveyorMainTask, NULL, &attr) == NULL) {
+        printf("[Main] Failed to create ConveyorMainTask!\r\n");
+    } else {
+        printf("[ConveyorApp] Task created successfully\r\n");
+    }
+}
+
+APP_FEATURE_INIT(ConveyorApp);
